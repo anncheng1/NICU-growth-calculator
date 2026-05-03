@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" shape-rendering="geometricPrecision">
+  <defs>
+    <!-- Background gradient: deep navy to teal-green -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#0D3B6E"/>
+      <stop offset="100%" stop-color="#1A6B3C"/>
+    </linearGradient>
+
+    <!-- Chart line gradient: blue → green -->
+    <linearGradient id="curveGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#5BB8F5"/>
+      <stop offset="100%" stop-color="#7ED957"/>
+    </linearGradient>
+
+    <!-- Glow for growth curve -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Soft shadow for infant -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.35)"/>
+    </filter>
+
+    <!-- Clip to rounded square -->
+    <clipPath id="roundclip">
+      <rect width="512" height="512" rx="112" ry="112"/>
+    </clipPath>
+  </defs>
+
+  <!-- App icon background -->
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/>
+
+  <!-- Subtle grid lines (chart background) -->
+  <g stroke="rgba(255,255,255,0.07)" stroke-width="1" clip-path="url(#roundclip)">
+    <!-- Horizontal grid -->
+    <line x1="60"  y1="150" x2="452" y2="150"/>
+    <line x1="60"  y1="210" x2="452" y2="210"/>
+    <line x1="60"  y1="270" x2="452" y2="270"/>
+    <line x1="60"  y1="330" x2="452" y2="330"/>
+    <line x1="60"  y1="390" x2="452" y2="390"/>
+    <!-- Vertical grid -->
+    <line x1="148" y1="90"  x2="148" y2="430"/>
+    <line x1="236" y1="90"  x2="236" y2="430"/>
+    <line x1="324" y1="90"  x2="324" y2="430"/>
+    <line x1="412" y1="90"  x2="412" y2="430"/>
+  </g>
+
+  <!-- Chart axes -->
+  <g stroke="rgba(255,255,255,0.25)" stroke-width="2.5" stroke-linecap="round">
+    <line x1="72" y1="90"  x2="72"  y2="420"/>
+    <line x1="72" y1="420" x2="450" y2="420"/>
+  </g>
+
+  <!-- Axis tick marks -->
+  <g stroke="rgba(255,255,255,0.20)" stroke-width="1.5">
+    <line x1="72" y1="150" x2="64" y2="150"/>
+    <line x1="72" y1="210" x2="64" y2="210"/>
+    <line x1="72" y1="270" x2="64" y2="270"/>
+    <line x1="72" y1="330" x2="64" y2="330"/>
+    <line x1="148" y1="420" x2="148" y2="428"/>
+    <line x1="236" y1="420" x2="236" y2="428"/>
+    <line x1="324" y1="420" x2="324" y2="428"/>
+    <line x1="412" y1="420" x2="412" y2="428"/>
+  </g>
+
+  <!-- P97 band (upper, faint) -->
+  <path d="M72,320 C120,310 170,285 220,255 C270,225 320,190 380,165 C400,158 425,152 450,148"
+        fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+  <!-- P3 band (lower, faint) -->
+  <path d="M72,395 C120,390 170,375 220,358 C270,340 320,315 380,295 C400,289 425,283 450,279"
+        fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+  <!-- Filled area between curves (AUC) -->
+  <path d="M72,395 C120,390 170,375 220,358 C270,340 320,315 380,295 C400,289 425,283 450,279
+           L450,148 C425,152 400,158 380,165 C320,190 270,225 220,255 C170,285 120,310 72,320 Z"
+        fill="rgba(255,255,255,0.04)"/>
+
+  <!-- P50 main growth curve — bright, glowing -->
+  <path d="M72,370 C105,360 138,342 175,320 C215,296 255,268 295,242 C330,220 365,200 410,182 C425,176 438,172 450,169"
+        fill="none"
+        stroke="url(#curveGrad)"
+        stroke-width="7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        filter="url(#glow)"/>
+
+  <!-- Fenton→WHO transition marker dot on curve -->
+  <circle cx="295" cy="242" r="9" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="295" cy="242" r="5" fill="#1A6B3C"/>
+
+  <!-- Transition vertical dashed line -->
+  <line x1="295" y1="420" x2="295" y2="200"
+        stroke="rgba(255,255,255,0.18)" stroke-width="1.5" stroke-dasharray="5,4"/>
+
+  <!-- ── Infant silhouette (swaddled newborn, right-facing) ── -->
+  <g filter="url(#shadow)" transform="translate(300,258)">
+    <!-- Body / swaddle — rounded oval -->
+    <ellipse cx="52" cy="28" rx="45" ry="33" fill="#FFFFFF" opacity="0.92"/>
+    <!-- Head -->
+    <circle cx="18" cy="8" r="24" fill="#FFFFFF" opacity="0.92"/>
+    <!-- Ear -->
+    <circle cx="5"  cy="12" r="8"  fill="#E8D5B8" opacity="0.85"/>
+    <!-- Face highlight (simple) -->
+    <circle cx="22" cy="4"  r="14" fill="#F5E6CC" opacity="0.60"/>
+    <!-- Swaddle fold lines -->
+    <path d="M28,15 Q50,5 90,18" fill="none" stroke="rgba(26,107,60,0.35)" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M25,26 Q55,16 95,28" fill="none" stroke="rgba(26,107,60,0.25)" stroke-width="2"   stroke-linecap="round"/>
+    <!-- Tiny fist peek-out -->
+    <circle cx="88" cy="8" r="9" fill="#F5E6CC" opacity="0.88"/>
+    <!-- Eye (closed, sleeping) -->
+    <path d="M17,3 Q22,0 27,3" fill="none" stroke="rgba(80,50,30,0.5)" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+
+  <!-- Weight label "kg" subtle -->
+  <text x="44" y="104" font-family="SF Pro Display, -apple-system, Helvetica Neue, sans-serif"
+        font-size="18" font-weight="700" fill="rgba(255,255,255,0.30)" text-anchor="middle">kg</text>
+
+  <!-- Weeks label at bottom -->
+  <text x="260" y="458" font-family="SF Pro Display, -apple-system, Helvetica Neue, sans-serif"
+        font-size="17" font-weight="500" fill="rgba(255,255,255,0.28)" text-anchor="middle">weeks CGA</text>
+
+  <!-- Top label: FENTON / WHO split -->
+  <text x="175" y="80" font-family="SF Pro Display, -apple-system, Helvetica Neue, sans-serif"
+        font-size="19" font-weight="700" fill="rgba(91,184,245,0.70)" text-anchor="middle">FENTON</text>
+  <text x="378" y="80" font-family="SF Pro Display, -apple-system, Helvetica Neue, sans-serif"
+        font-size="19" font-weight="700" fill="rgba(126,217,87,0.70)" text-anchor="middle">WHO</text>
+  <line x1="295" y1="62" x2="295" y2="82" stroke="rgba(255,255,255,0.20)" stroke-width="1.5"/>
+</svg>
