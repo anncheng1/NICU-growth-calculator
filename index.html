@@ -5,11 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Neonatal Growth Chart Calculator · Hospital Miri NICU</title>
   <meta name="description" content="Fenton 2025 preterm → WHO 0–5y term growth chart calculator. Auto-transitions at 50 weeks CGA. Weight, length/height, and head circumference percentiles." />
+  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+
+  <!-- ── iPhone / iPad home screen ── -->
+  <!-- iOS requires a PNG for apple-touch-icon — SVG is ignored -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
+  <!-- Hides Safari browser chrome when launched from home screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <!-- Name shown under the icon on the home screen -->
+  <meta name="apple-mobile-web-app-title" content="NICU Growth" />
+
+  <!-- ── PWA manifest (Android + modern browsers) ── -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- ── Theme colour (browser chrome / status bar) ── -->
+  <meta name="theme-color" content="#0D3B6E" />
+  <meta name="msapplication-TileColor" content="#0D3B6E" />
+  <meta name="msapplication-TileImage" content="icon-192.png" />
+
+  <!-- ── Open Graph ── -->
   <meta property="og:title"       content="Neonatal Growth Chart Calculator · Hospital Miri NICU" />
   <meta property="og:description" content="Fenton 2025 preterm → WHO 0–5y. Auto-transitions at 50w CGA. Weight, length, head circumference percentiles." />
-  <meta property="og:image"       content="icon.svg" />
+  <meta property="og:image"       content="icon-512.png" />
   <meta property="og:type"        content="website" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
