@@ -1,0 +1,32 @@
+{
+  "name": "Neonatal Growth Chart Calculator",
+  "short_name": "NICU Growth",
+  "description": "Fenton 2025 preterm → WHO 0–5y term growth chart calculator. Auto-transitions at 50w CGA.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D3B6E",
+  "theme_color": "#0D3B6E",
+  "lang": "en",
+  "categories": ["medical", "health"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
