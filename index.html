@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neonatal Growth Chart Calculator · Hospital Miri NICU</title>
+  <meta name="description" content="Fenton 2025 preterm → WHO 0–5y term growth chart calculator. Auto-transitions at 50 weeks CGA. Weight, length/height, and head circumference percentiles." />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <meta property="og:title"       content="Neonatal Growth Chart Calculator · Hospital Miri NICU" />
+  <meta property="og:description" content="Fenton 2025 preterm → WHO 0–5y. Auto-transitions at 50w CGA. Weight, length, head circumference percentiles." />
+  <meta property="og:image"       content="icon.svg" />
+  <meta property="og:type"        content="website" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-50: #E6F1FB; --blue-200: #85B7EB; --blue-600: #185FA5; --blue-800: #0C447C;
+      --green-50: #EAF3DE; --green-600: #3B6D11; --green-800: #27500A;
+      --pink-50: #FBEAF0; --pink-600: #993556; --pink-800: #72243E;
+      --amber-50: #FAEEDA; --amber-600: #854F0B;
+      --red-50: #FCEBEB; --red-600: #A32D2D;
+      --purple-50: #EEEDFE; --purple-600: #534AB7;
+      --gray-50: #F7F6F3; --gray-100: #EDEDEA; --gray-200: #D3D1C7;
+      --gray-400: #888780; --gray-600: #5F5E5A; --gray-800: #2C2C2A;
+      --white: #ffffff;
+      --text-primary: #1a1a18;
+      --text-secondary: #5F5E5A;
+      --text-tertiary: #888780;
+      --border: rgba(0,0,0,0.12);
+      --border-med: rgba(0,0,0,0.18);
+      --surface: #ffffff;
+      --surface-secondary: #F7F6F3;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --blue-50: #0c2240; --blue-200: #185FA5; --blue-600: #85B7EB; --blue-800: #B5D4F4;
+        --green-50: #172804; --green-600: #97C459; --green-800: #C0DD97;
+        --pink-50: #2e0f1c; --pink-600: #ED93B1; --pink-800: #F4C0D1;
+        --amber-50: #2a1800; --amber-600: #EF9F27;
+        --red-50: #2a0a0a; --red-600: #F09595;
+        --purple-50: #1a1840; --purple-600: #AFA9EC;
+        --gray-50: #1e1e1c; --gray-100: #2c2c2a; --gray-200: #444441;
+        --gray-400: #888780; --gray-600: #B4B2A9; --gray-800: #D3D1C7;
+        --white: #1e1e1c;
+        --text-primary: #E8E6E0;
+        --text-secondary: #B4B2A9;
+        --text-tertiary: #888780;
+        --border: rgba(255,255,255,0.10);
+        --border-med: rgba(255,255,255,0.16);
+        --surface: #262624;
+        --surface-secondary: #1e1e1c;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--surface-secondary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── Header ── */
+    .app-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: var(--shadow-sm);
+    }
+    .header-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #185FA5 0%, #3B6D11 100%);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .header-icon svg { width: 22px; height: 22px; }
+    .header-text h1 { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .header-text p  { font-size: 12px; color: var(--text-secondary); }
+    .header-badges  { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .hbadge {
+      font-size: 11px; padding: 3px 8px;
+      border-radius: 20px; font-weight: 500;
+      border: 1px solid;
+    }
+    .hbadge-blue  { background: var(--blue-50);  color: var(--blue-600);  border-color: var(--blue-200); }
+    .hbadge-green { background: var(--green-50); color: var(--green-600); border-color: var(--green-600); }
+
+    /* ── Layout ── */
+    .app-body { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-title {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+    }
+
+    /* ── Sex toggle ── */
+    .sex-row { display: flex; gap: 8px; margin-bottom: 18px; }
+    .sex-btn {
+      flex: 1; padding: 10px 8px;
+      border: 1.5px solid var(--border-med);
+      border-radius: var(--radius-md);
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px; font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.15s ease;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .sex-btn:hover { border-color: var(--gray-400); }
+    .sex-btn.active-boy  { background: var(--blue-50);  border-color: var(--blue-600);  color: var(--blue-600); }
+    .sex-btn.active-girl { background: var(--pink-50);  border-color: var(--pink-600);  color: var(--pink-600); }
+    .sex-icon { font-size: 16px; }
+
+    /* ── Form grid ── */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+    .form-field label {
+      display: block; font-size: 12px; font-weight: 500;
+      color: var(--text-secondary); margin-bottom: 5px;
+    }
+    .form-field input, .form-field select {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border-med);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .form-field input:focus, .form-field select:focus {
+      outline: none; border-color: #378ADD;
+      box-shadow: 0 0 0 3px rgba(55,138,221,0.12);
+    }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .hint { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
+
+    /* ── Age result chips ── */
+    .chips-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .chip {
+      background: var(--surface-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 6px 12px;
+    }
+    .chip-val { font-size: 14px; font-weight: 600; color: var(--text-primary); display: block; }
+    .chip-lbl { font-size: 11px; color: var(--text-tertiary); }
+
+    /* ── Chart banner ── */
+    .chart-banner {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid;
+      margin-bottom: 14px;
+    }
+    .chart-banner.fenton { background: var(--blue-50); border-color: var(--blue-200); }
+    .chart-banner.who    { background: var(--green-50); border-color: var(--green-600); }
+    .banner-icon { font-size: 18px; }
+    .banner-title { font-size: 13px; font-weight: 600; }
+    .banner-fenton .banner-title { color: var(--blue-600); }
+    .banner-who    .banner-title { color: var(--green-600); }
+    .banner-sub { font-size: 12px; color: var(--text-secondary); }
+
+    /* ── Timeline ── */
+    .timeline { margin: 4px 0 6px; }
+    .tl-track {
+      height: 6px; border-radius: 3px;
+      background: var(--gray-100);
+      position: relative; overflow: visible;
+    }
+    .tl-seg {
+      position: absolute; top: 0; height: 6px; border-radius: 3px;
+    }
+    .tl-seg-blue  { background: #378ADD; }
+    .tl-seg-green { background: #639922; }
+    .tl-marker {
+      position: absolute; top: -5px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 2.5px solid var(--surface);
+      transform: translateX(-50%);
+      box-shadow: var(--shadow-sm);
+      transition: left 0.3s ease;
+    }
+    .tl-labels {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    /* ── Measurement inputs ── */
+    .meas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+
+    /* ── Percentile results ── */
+    .pct-container {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .pct-ref-bar {
+      padding: 8px 14px;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+    }
+    .pct-ref-bar.fenton { background: var(--blue-50);  color: var(--blue-600); }
+    .pct-ref-bar.who    { background: var(--green-50); color: var(--green-600); }
+    .pct-item { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .pct-item:last-child { border-bottom: none; }
+    .pct-top {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px; flex-wrap: wrap; gap: 6px;
+    }
+    .pct-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .pct-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pct-measurement { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .pct-centile { font-size: 12px; color: var(--text-secondary); }
+    .pct-tag {
+      font-size: 11px; font-weight: 600; padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .tag-normal  { background: var(--green-50);  color: var(--green-600); }
+    .tag-low     { background: var(--amber-50);  color: var(--amber-600); }
+    .tag-vlow    { background: var(--red-50);    color: var(--red-600); }
+    .tag-high    { background: var(--purple-50); color: var(--purple-600); }
+
+    /* ── Percentile bar ── */
+    .pct-bar-row { display: flex; align-items: center; gap: 8px; }
+    .pct-bar-lbl { font-size: 10px; color: var(--text-tertiary); width: 24px; }
+    .pct-bar-lbl:last-of-type { text-align: right; }
+    .pct-track {
+      flex: 1; height: 6px;
+      background: var(--gray-100);
+      border-radius: 3px; position: relative;
+    }
+    .pct-dot {
+      position: absolute; top: -4px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+      transform: translateX(-50%);
+      box-shadow: var(--shadow-sm);
+    }
+    .pct-50th { font-size: 11px; color: var(--text-tertiary); min-width: 90px; text-align: right; }
+
+    /* ── Empty / hidden ── */
+    .hidden { display: none !important; }
+
+    /* ── Info footer ── */
+    .info-strip {
+      background: var(--surface-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .info-strip strong { color: var(--text-primary); }
+
+    /* ── Footer ── */
+    .app-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .app-footer a { color: var(--text-secondary); }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .app-header { padding: 12px 16px; }
+      .header-badges { display: none; }
+      .app-body { padding: 16px 12px 48px; }
+      .card { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+<header class="app-header">
+  <div class="header-icon" style="background:none;padding:0;overflow:hidden;border-radius:10px;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="40" height="40" shape-rendering="geometricPrecision" style="display:block;">
+      <defs>
+        <linearGradient id="hbg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#0D3B6E"/><stop offset="100%" stop-color="#1A6B3C"/>
+        </linearGradient>
+        <linearGradient id="hcg" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#5BB8F5"/><stop offset="100%" stop-color="#7ED957"/>
+        </linearGradient>
+        <filter id="hglow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <rect width="512" height="512" rx="112" ry="112" fill="url(#hbg)"/>
+      <g stroke="rgba(255,255,255,0.07)" stroke-width="1">
+        <line x1="60" y1="210" x2="452" y2="210"/><line x1="60" y1="330" x2="452" y2="330"/>
+        <line x1="236" y1="90" x2="236" y2="430"/><line x1="412" y1="90" x2="412" y2="430"/>
+      </g>
+      <g stroke="rgba(255,255,255,0.22)" stroke-width="2.5" stroke-linecap="round">
+        <line x1="72" y1="90" x2="72" y2="420"/><line x1="72" y1="420" x2="450" y2="420"/>
+      </g>
+      <path d="M72,395 C120,390 170,375 220,358 C270,340 320,315 380,295 C400,289 425,283 450,279 L450,148 C425,152 400,158 380,165 C320,190 270,225 220,255 C170,285 120,310 72,320 Z" fill="rgba(255,255,255,0.04)"/>
+      <path d="M72,370 C105,360 138,342 175,320 C215,296 255,268 295,242 C330,220 365,200 410,182 C425,176 438,172 450,169" fill="none" stroke="url(#hcg)" stroke-width="7" stroke-linecap="round" filter="url(#hglow)"/>
+      <line x1="295" y1="420" x2="295" y2="200" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <circle cx="295" cy="242" r="9" fill="#FFFFFF" opacity="0.9"/>
+      <circle cx="295" cy="242" r="5" fill="#1A6B3C"/>
+      <g transform="translate(300,258)">
+        <ellipse cx="52" cy="28" rx="45" ry="33" fill="#FFFFFF" opacity="0.90"/>
+        <circle cx="18" cy="8" r="24" fill="#FFFFFF" opacity="0.90"/>
+        <circle cx="22" cy="4" r="14" fill="#F5E6CC" opacity="0.60"/>
+        <path d="M28,15 Q50,5 90,18" fill="none" stroke="rgba(26,107,60,0.35)" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="88" cy="8" r="9" fill="#F5E6CC" opacity="0.85"/>
+        <path d="M17,3 Q22,0 27,3" fill="none" stroke="rgba(80,50,30,0.5)" stroke-width="1.8" stroke-linecap="round"/>
+      </g>
+    </svg>
+  </div>
+  <div class="header-text">
+    <h1>Neonatal Growth Chart Calculator</h1>
+    <p>Hospital Miri NICU · Department of Neonatology</p>
+  </div>
+  <div class="header-badges">
+    <span class="hbadge hbadge-blue">Fenton 2025</span>
+    <span class="hbadge hbadge-green">WHO 0–5y</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════ BODY ════════════════════════════════ -->
+<main class="app-body">
+
+  <!-- Patient Details -->
+  <div class="card">
+    <p class="card-title">Patient Details</p>
+
+    <div class="sex-row">
+      <button class="sex-btn active-boy" id="btn-boy" onclick="setSex('boy')">
+        <span class="sex-icon">♂</span> Male
+      </button>
+      <button class="sex-btn" id="btn-girl" onclick="setSex('girl')">
+        <span class="sex-icon">♀</span> Female
+      </button>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="dob">Date of Birth</label>
+        <input type="date" id="dob" oninput="calculate()" />
+      </div>
+
+      <div class="form-field">
+        <label>GA at Birth</label>
+        <div class="pair">
+          <input type="number" id="ga-wk" min="22" max="43" placeholder="Weeks" oninput="calculate()" />
+          <input type="number" id="ga-dy" min="0" max="6" placeholder="Days" oninput="calculate()" />
+        </div>
+        <p class="hint">Gestational age (e.g. 28w 3d)</p>
+      </div>
+
+      <div class="form-field">
+        <label for="adate">Assessment Date</label>
+        <input type="date" id="adate" oninput="calculate()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Age Results -->
+  <div class="card hidden" id="age-card">
+    <p class="card-title">Age Calculations</p>
+    <div class="chips-row" id="chips"></div>
+
+    <div class="chart-banner" id="chart-banner">
+      <span class="banner-icon" id="banner-icon">📊</span>
+      <div>
+        <div class="banner-title" id="banner-title">Fenton 2025</div>
+        <div class="banner-sub" id="banner-sub"></div>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-track">
+        <div class="tl-seg tl-seg-blue"  id="tl-pre"  style="left:0;width:0%"></div>
+        <div class="tl-seg tl-seg-green" id="tl-term" style="left:0;width:0%"></div>
+        <div class="tl-marker" id="tl-dot" style="left:0%"></div>
+      </div>
+      <div class="tl-labels">
+        <span>22w GA</span><span>40w (term)</span><span>50w CGA</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Measurements -->
+  <div class="card hidden" id="meas-card">
+    <p class="card-title">Measurements <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;color:var(--text-tertiary)">(enter any for percentile lookup)</span></p>
+    <div class="meas-grid">
+      <div class="form-field">
+        <label for="mwt">Weight (kg)</label>
+        <input type="number" id="mwt" step="0.01" min="0.3" max="30" placeholder="e.g. 1.450" oninput="renderPct()" />
+      </div>
+      <div class="form-field">
+        <label for="mlen">Length / Height (cm)</label>
+        <input type="number" id="mlen" step="0.1" min="20" max="130" placeholder="e.g. 38.5" oninput="renderPct()" />
+      </div>
+      <div class="form-field">
+        <label for="mhc">Head Circumference (cm)</label>
+        <input type="number" id="mhc" step="0.1" min="15" max="60" placeholder="e.g. 27.0" oninput="renderPct()" />
+      </div>
+    </div>
+    <div id="pct-out"></div>
+  </div>
+
+  <!-- Reference Info -->
+  <div class="info-strip">
+    <strong>Chart selection logic:</strong>
+    Fenton 2025 (third-generation) is used while corrected gestational age (CGA) is ≤ 50 weeks.
+    Once CGA exceeds 50 weeks, the WHO Child Growth Standards (0–5 years) are applied using <strong>corrected age</strong>.
+    Percentile bands shown: P3 · P15 · P50 · P85 · P97.
+    <br><br>
+    <strong>References:</strong>
+    Fenton TR et al. <em>BMC Pediatrics</em> 2013; updated 2025 (iNeo International Consortium).
+    WHO Multicentre Growth Reference Study Group. <em>Acta Paediatrica</em> 2006.
+  </div>
+
+  <div class="app-footer">
+    Hospital Miri NICU · Department of Neonatology, Sarawak, Malaysia ·
+    <a href="https://github.com/" target="_blank">GitHub</a> ·
+    For clinical reference only — verify against printed charts
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════ SCRIPT ══════════════════════════════ -->
+<script>
+'use strict';
+
+/* ── State ── */
+let SEX = 'boy';
+let CR  = null;
+
+/* ── Init ── */
+document.getElementById('adate').value = new Date().toISOString().split('T')[0];
+
+/* ── Sex toggle ── */
+function setSex(s) {
+  SEX = s;
+  document.getElementById('btn-boy').className  = 'sex-btn' + (s === 'boy'  ? ' active-boy'  : '');
+  document.getElementById('btn-girl').className = 'sex-btn' + (s === 'girl' ? ' active-girl' : '');
+  calculate();
+}
+
+/* ── Helpers ── */
+function daysBetween(a, b) { return Math.floor((b - a) / 86400000); }
+
+function breakdownAge(totalDays) {
+  const y = Math.floor(totalDays / 365.25);
+  const m = Math.floor((totalDays % 365.25) / 30.4375);
+  const d = Math.floor(totalDays % 30.4375);
+  return { y, m, d };
+}
+
+function ageStr(y, m, d) {
+  const parts = [];
+  if (y > 0) parts.push(y + 'y');
+  parts.push(m + 'm');
+  parts.push(d + 'd');
+  return parts.join(' ');
+}
+
+/* ── Main calculation ── */
+function calculate() {
+  const dobVal   = document.getElementById('dob').value;
+  const gaWk     = parseInt(document.getElementById('ga-wk').value)  || 0;
+  const gaDy     = parseInt(document.getElementById('ga-dy').value)  || 0;
+  const adateVal = document.getElementById('adate').value;
+
+  const ageCard  = document.getElementById('age-card');
+  const measCard = document.getElementById('meas-card');
+
+  if (!dobVal || !gaWk || !adateVal) {
+    ageCard.classList.add('hidden');
+    measCard.classList.add('hidden');
+    return;
+  }
+
+  const dob   = new Date(dobVal   + 'T00:00:00');
+  const adate = new Date(adateVal + 'T00:00:00');
+  if (adate < dob) { ageCard.classList.add('hidden'); return; }
+
+  const gaBirth   = gaWk * 7 + gaDy;          // GA at birth in days
+  const chronoDays = daysBetween(dob, adate);  // days of life
+  const cgaDays   = gaBirth + chronoDays;      // CGA in days
+  const cgaWk     = Math.floor(cgaDays / 7);
+  const cgaDyRem  = cgaDays % 7;
+  const corrDays  = cgaDays - 280;             // corrected age (from 40w=280d)
+
+  const chAge   = breakdownAge(chronoDays);
+  const useFenton = cgaDays <= 350;            // ≤ 50 weeks
+
+  let corrStr = '';
+  let corrAgeMo = 0;
+  if (corrDays < 0) {
+    corrStr = 'Not yet due';
+  } else {
+    const c = breakdownAge(corrDays);
+    corrStr = ageStr(c.y, c.m, c.d);
+    corrAgeMo = corrDays / 30.4375;
+  }
+
+  CR = { cgaWk, cgaDyRem, cgaDays, corrDays, corrAgeMo, chronoDays, useFenton };
+
+  /* Chips */
+  document.getElementById('chips').innerHTML = [
+    { val: `${cgaWk}w ${cgaDyRem}d`,  lbl: 'CGA' },
+    { val: ageStr(chAge.y, chAge.m, chAge.d), lbl: 'Chronological age' },
+    { val: corrStr,                     lbl: 'Corrected age' },
+    { val: chronoDays + ' days',        lbl: 'Days of life' },
+  ].map(c => `
+    <div class="chip">
+      <span class="chip-val">${c.val}</span>
+      <span class="chip-lbl">${c.lbl}</span>
+    </div>`).join('');
+
+  /* Timeline */
+  const MIN_D = 154, MAX_D = 350, TERM_D = 280;  // 22w, 50w, 40w
+  const termPct = ((TERM_D - MIN_D) / (MAX_D - MIN_D)) * 100;
+  const curPct  = Math.min(100, Math.max(0, ((cgaDays - MIN_D) / (MAX_D - MIN_D)) * 100));
+
+  if (useFenton) {
+    document.getElementById('tl-pre').style.cssText  = `left:0;width:${curPct}%`;
+    document.getElementById('tl-term').style.cssText = 'left:0;width:0%';
+    document.getElementById('tl-dot').style.background = '#378ADD';
+  } else {
+    document.getElementById('tl-pre').style.cssText  = `left:0;width:${termPct}%`;
+    document.getElementById('tl-term').style.cssText = `left:${termPct}%;width:${curPct - termPct}%`;
+    document.getElementById('tl-dot').style.background = '#639922';
+  }
+  document.getElementById('tl-dot').style.left = curPct + '%';
+
+  /* Banner */
+  const banner = document.getElementById('chart-banner');
+  if (useFenton) {
+    banner.className = 'chart-banner fenton';
+    document.getElementById('banner-icon').textContent = '📈';
+    document.getElementById('banner-title').textContent = 'Fenton 2025 — Third-generation preterm chart';
+    document.getElementById('banner-sub').textContent =
+      `CGA ${cgaWk}w ${cgaDyRem}d — preterm reference applies until 50w CGA`;
+  } else {
+    banner.className = 'chart-banner who';
+    document.getElementById('banner-icon').textContent = '📊';
+    document.getElementById('banner-title').textContent = 'WHO Child Growth Standards (0–5 years)';
+    document.getElementById('banner-sub').textContent =
+      `CGA > 50w — plotted by corrected age: ${corrStr}`;
+  }
+
+  ageCard.classList.remove('hidden');
+  measCard.classList.remove('hidden');
+  renderPct();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FENTON 2025 DATA
+   [p3, p15, p50, p85, p97] — Weight (kg), Length (cm), HC (cm)
+   Weeks 22–50, sex-specific
+   Source: Fenton TR 2025 third-generation update (FentonGrowth.ca)
+   ═══════════════════════════════════════════════════════════════════════ */
+const FENTON = {
+  boy: {
+    22:{w:[0.36,0.42,0.50,0.60,0.69],l:[24.5,26.0,27.5,29.0,31.3],h:[18.0,19.3,20.7,22.1,23.4]},
+    23:{w:[0.41,0.48,0.57,0.69,0.79],l:[26.0,27.5,29.2,30.9,33.1],h:[19.0,20.3,21.8,23.2,24.7]},
+    24:{w:[0.47,0.56,0.66,0.80,0.92],l:[27.5,29.0,30.8,32.7,34.9],h:[20.0,21.3,22.9,24.5,25.9]},
+    25:{w:[0.54,0.65,0.77,0.93,1.07],l:[28.9,30.5,32.4,34.3,36.7],h:[21.0,22.4,24.0,25.6,27.1]},
+    26:{w:[0.63,0.76,0.89,1.08,1.24],l:[30.2,31.9,33.9,35.9,38.4],h:[22.0,23.4,25.1,26.8,28.3]},
+    27:{w:[0.74,0.88,1.04,1.26,1.45],l:[31.5,33.2,35.3,37.4,40.0],h:[22.9,24.4,26.1,27.9,29.4]},
+    28:{w:[0.86,1.02,1.20,1.45,1.67],l:[32.7,34.6,36.7,38.9,41.5],h:[23.8,25.3,27.1,29.0,30.5]},
+    29:{w:[0.99,1.17,1.38,1.67,1.92],l:[33.9,35.8,38.0,40.3,43.0],h:[24.7,26.2,28.0,29.9,31.5]},
+    30:{w:[1.15,1.35,1.59,1.92,2.20],l:[35.0,37.0,39.3,41.7,44.4],h:[25.5,27.1,28.9,30.9,32.5]},
+    31:{w:[1.32,1.55,1.83,2.21,2.52],l:[36.1,38.1,40.5,43.0,45.7],h:[26.3,27.9,29.8,31.8,33.4]},
+    32:{w:[1.51,1.78,2.09,2.52,2.86],l:[37.2,39.3,41.7,44.2,47.0],h:[27.1,28.7,30.6,32.7,34.3]},
+    33:{w:[1.72,2.02,2.37,2.86,3.24],l:[38.2,40.3,42.8,45.4,48.2],h:[27.9,29.6,31.5,33.6,35.2]},
+    34:{w:[1.95,2.29,2.68,3.23,3.65],l:[39.2,41.4,43.9,46.5,49.4],h:[28.7,30.4,32.3,34.4,36.1]},
+    35:{w:[2.19,2.57,3.00,3.62,4.08],l:[40.1,42.3,44.9,47.6,50.5],h:[29.5,31.2,33.2,35.3,37.0]},
+    36:{w:[2.44,2.86,3.34,4.03,4.53],l:[41.0,43.3,45.9,48.7,51.6],h:[30.3,32.0,34.0,36.2,37.9]},
+    37:{w:[2.71,3.17,3.69,4.45,5.00],l:[41.9,44.2,46.8,49.7,52.6],h:[31.1,32.8,34.8,37.1,38.7]},
+    38:{w:[2.97,3.47,4.04,4.87,5.46],l:[42.8,45.1,47.8,50.7,53.6],h:[31.9,33.6,35.6,37.9,39.5]},
+    39:{w:[3.20,3.75,4.35,5.25,5.88],l:[43.7,46.0,48.7,51.7,54.6],h:[32.7,34.4,36.5,38.8,40.4]},
+    40:{w:[3.39,3.98,4.62,5.58,6.25],l:[44.6,47.0,49.7,52.7,55.6],h:[33.4,35.2,37.3,39.6,41.2]},
+    41:{w:[3.56,4.18,4.85,5.86,6.56],l:[45.4,47.8,50.6,53.7,56.6],h:[34.1,35.9,38.0,40.4,42.0]},
+    42:{w:[3.69,4.34,5.04,6.10,6.82],l:[46.1,48.6,51.4,54.5,57.5],h:[34.7,36.6,38.7,41.1,42.7]},
+    43:{w:[3.81,4.48,5.20,6.30,7.04],l:[46.7,49.2,52.1,55.2,58.3],h:[35.3,37.2,39.3,41.8,43.4]},
+    44:{w:[3.91,4.60,5.34,6.48,7.23],l:[47.2,49.8,52.7,55.9,59.0],h:[35.8,37.7,39.9,42.4,44.0]},
+    45:{w:[4.00,4.71,5.47,6.65,7.41],l:[47.6,50.2,53.2,56.5,59.6],h:[36.3,38.2,40.4,43.0,44.6]},
+    46:{w:[4.08,4.81,5.58,6.80,7.57],l:[47.9,50.6,53.7,57.0,60.2],h:[36.8,38.7,40.9,43.5,45.1]},
+    47:{w:[4.16,4.90,5.69,6.94,7.72],l:[48.2,51.0,54.1,57.5,60.7],h:[37.2,39.2,41.4,44.0,45.6]},
+    48:{w:[4.23,4.98,5.79,7.07,7.86],l:[48.5,51.3,54.5,57.9,61.1],h:[37.6,39.6,41.8,44.4,46.1]},
+    49:{w:[4.30,5.07,5.89,7.20,7.99],l:[48.8,51.6,54.8,58.3,61.5],h:[38.0,40.0,42.2,44.8,46.5]},
+    50:{w:[4.36,5.15,5.98,7.31,8.12],l:[49.1,51.9,55.1,58.6,61.9],h:[38.3,40.4,42.6,45.2,46.9]},
+  },
+  girl: {
+    22:{w:[0.34,0.40,0.47,0.56,0.65],l:[23.5,25.0,26.5,28.2,30.0],h:[17.5,18.7,20.0,21.4,22.7]},
+    23:{w:[0.39,0.46,0.54,0.65,0.74],l:[25.0,26.5,28.1,29.8,31.8],h:[18.5,19.7,21.1,22.5,23.9]},
+    24:{w:[0.44,0.53,0.62,0.74,0.86],l:[26.5,28.0,29.7,31.5,33.6],h:[19.4,20.7,22.2,23.7,25.1]},
+    25:{w:[0.51,0.61,0.72,0.86,1.00],l:[27.8,29.4,31.2,33.1,35.3],h:[20.3,21.7,23.2,24.8,26.2]},
+    26:{w:[0.59,0.71,0.84,1.01,1.17],l:[29.1,30.7,32.7,34.7,37.0],h:[21.2,22.6,24.2,25.8,27.3]},
+    27:{w:[0.69,0.82,0.97,1.17,1.36],l:[30.4,32.1,34.1,36.2,38.6],h:[22.1,23.5,25.1,26.8,28.3]},
+    28:{w:[0.79,0.95,1.12,1.35,1.57],l:[31.6,33.4,35.5,37.7,40.1],h:[22.9,24.3,26.0,27.7,29.2]},
+    29:{w:[0.92,1.10,1.29,1.56,1.81],l:[32.8,34.6,36.8,39.1,41.6],h:[23.7,25.2,26.9,28.7,30.2]},
+    30:{w:[1.06,1.26,1.48,1.80,2.07],l:[33.9,35.8,38.1,40.5,43.0],h:[24.5,26.0,27.7,29.6,31.1]},
+    31:{w:[1.22,1.45,1.70,2.06,2.37],l:[35.0,37.0,39.3,41.8,44.3],h:[25.3,26.8,28.6,30.5,32.0]},
+    32:{w:[1.40,1.65,1.94,2.35,2.71],l:[36.1,38.1,40.5,43.1,45.6],h:[26.1,27.6,29.4,31.4,32.8]},
+    33:{w:[1.59,1.88,2.21,2.67,3.08],l:[37.1,39.2,41.6,44.2,46.8],h:[26.9,28.5,30.3,32.3,33.7]},
+    34:{w:[1.81,2.13,2.50,3.02,3.48],l:[38.1,40.2,42.7,45.3,47.9],h:[27.7,29.3,31.1,33.2,34.6]},
+    35:{w:[2.04,2.40,2.81,3.40,3.91],l:[39.0,41.2,43.7,46.4,49.0],h:[28.5,30.1,31.9,34.0,35.4]},
+    36:{w:[2.26,2.67,3.12,3.77,4.34],l:[39.8,42.0,44.6,47.4,50.1],h:[29.2,30.9,32.7,34.8,36.2]},
+    37:{w:[2.49,2.94,3.44,4.16,4.79],l:[40.6,42.9,45.6,48.4,51.2],h:[30.0,31.7,33.5,35.7,37.1]},
+    38:{w:[2.72,3.22,3.76,4.55,5.22],l:[41.5,43.8,46.5,49.4,52.1],h:[30.8,32.4,34.3,36.5,37.9]},
+    39:{w:[2.93,3.47,4.05,4.91,5.64],l:[42.3,44.6,47.3,50.3,53.0],h:[31.5,33.2,35.1,37.3,38.7]},
+    40:{w:[3.11,3.69,4.31,5.23,6.00],l:[43.1,45.5,48.2,51.2,53.9],h:[32.2,33.9,35.8,38.1,39.5]},
+    41:{w:[3.27,3.88,4.54,5.51,6.33],l:[43.9,46.3,49.1,52.1,54.8],h:[32.9,34.6,36.5,38.8,40.2]},
+    42:{w:[3.42,4.06,4.74,5.76,6.61],l:[44.7,47.1,49.9,53.0,55.7],h:[33.6,35.3,37.2,39.5,40.9]},
+    43:{w:[3.55,4.22,4.92,5.98,6.86],l:[45.4,47.9,50.7,53.8,56.6],h:[34.2,36.0,37.9,40.2,41.6]},
+    44:{w:[3.65,4.35,5.08,6.19,7.08],l:[46.0,48.6,51.5,54.6,57.4],h:[34.8,36.6,38.5,40.9,42.3]},
+    45:{w:[3.75,4.47,5.22,6.38,7.28],l:[46.6,49.2,52.2,55.3,58.2],h:[35.4,37.2,39.1,41.5,42.9]},
+    46:{w:[3.83,4.57,5.35,6.56,7.46],l:[47.1,49.8,52.8,56.0,58.9],h:[35.9,37.7,39.7,42.1,43.5]},
+    47:{w:[3.91,4.67,5.47,6.73,7.63],l:[47.6,50.3,53.4,56.6,59.5],h:[36.4,38.2,40.2,42.7,44.1]},
+    48:{w:[3.99,4.76,5.58,6.89,7.79],l:[48.0,50.8,53.9,57.1,60.2],h:[36.9,38.7,40.7,43.2,44.7]},
+    49:{w:[4.06,4.85,5.68,7.04,7.93],l:[48.4,51.2,54.4,57.7,60.7],h:[37.3,39.2,41.2,43.7,45.2]},
+    50:{w:[4.12,4.94,5.78,7.18,8.07],l:[48.8,51.7,54.8,58.2,61.3],h:[37.7,39.6,41.7,44.2,45.7]},
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   WHO 0–60 MONTHS
+   All tables: [p3, p15, p50, p85, p97] at every month 0–60
+   Weight-for-age, Length/Height-for-age, Head Circumference-for-age
+   Source: WHO Child Growth Standards, 2006
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Weight-for-age (kg) */
+const WHO_WT = {
+  boy: [
+    [2.50,2.97,3.53,4.13,4.65],[3.43,4.00,4.76,5.57,6.17],[4.37,5.02,5.93,6.88,7.57],
+    [5.12,5.82,6.82,7.87,8.62],[5.71,6.45,7.50,8.60,9.39],[6.18,6.94,8.02,9.16,9.98],
+    [6.57,7.35,8.46,9.63,10.49],[6.90,7.70,8.83,10.03,10.91],[7.18,7.99,9.15,10.38,11.29],
+    [7.43,8.25,9.43,10.69,11.62],[7.65,8.49,9.68,10.96,11.91],[7.84,8.69,9.91,11.21,12.18],
+    [8.02,8.88,10.11,11.44,12.43],[8.18,9.05,10.30,11.65,12.66],[8.34,9.22,10.49,11.86,12.88],
+    [8.48,9.37,10.66,12.05,13.09],[8.62,9.52,10.83,12.24,13.30],[8.75,9.67,10.99,12.43,13.50],
+    [8.88,9.80,11.15,12.61,13.70],[9.00,9.93,11.30,12.79,13.89],[9.12,10.07,11.46,12.96,14.08],
+    [9.24,10.20,11.61,13.13,14.27],[9.35,10.32,11.75,13.30,14.45],[9.46,10.45,11.90,13.47,14.63],
+    [9.57,10.57,12.04,13.63,14.81],[9.68,10.69,12.17,13.79,14.99],[9.78,10.80,12.31,13.95,15.17],
+    [9.89,10.92,12.44,14.11,15.35],[9.99,11.03,12.57,14.26,15.52],[10.09,11.14,12.70,14.41,15.70],
+    [10.19,11.25,12.83,14.56,15.87],[10.29,11.36,12.96,14.71,16.04],[10.38,11.46,13.08,14.86,16.21],
+    [10.48,11.57,13.20,15.00,16.38],[10.57,11.67,13.33,15.14,16.55],[10.66,11.77,13.45,15.28,16.72],
+    [10.76,11.88,13.57,15.43,16.89],[10.85,11.98,13.69,15.57,17.06],[10.94,12.08,13.82,15.71,17.22],
+    [11.03,12.18,13.94,15.85,17.39],[11.12,12.28,14.06,15.99,17.56],[11.21,12.38,14.19,16.13,17.73],
+    [11.30,12.49,14.32,16.27,17.90],[11.39,12.59,14.45,16.42,18.07],[11.48,12.70,14.58,16.57,18.25],
+    [11.57,12.80,14.71,16.72,18.42],[11.66,12.91,14.84,16.87,18.60],[11.75,13.02,14.98,17.02,18.78],
+    [11.85,13.13,15.12,17.18,18.97],[11.94,13.24,15.26,17.33,19.16],[12.04,13.36,15.41,17.49,19.35],
+    [12.14,13.47,15.56,17.65,19.55],[12.23,13.59,15.71,17.82,19.74],[12.33,13.70,15.86,17.98,19.94],
+    [12.43,13.82,16.01,18.15,20.14],[12.53,13.94,16.17,18.32,20.34],[12.63,14.07,16.33,18.49,20.55],
+    [12.74,14.19,16.49,18.67,20.76],[12.84,14.32,16.65,18.85,20.97],[12.95,14.45,16.82,19.03,21.19],
+    [13.06,14.58,16.99,19.22,21.41]
+  ],
+  girl: [
+    [2.36,2.82,3.35,3.93,4.42],[3.16,3.73,4.45,5.20,5.79],[3.94,4.61,5.45,6.33,7.02],
+    [4.62,5.37,6.30,7.28,8.04],[5.19,5.99,6.99,8.03,8.83],[5.68,6.52,7.56,8.65,9.49],
+    [6.12,6.99,8.08,9.21,10.08],[6.51,7.40,8.53,9.70,10.60],[6.86,7.77,8.94,10.15,11.08],
+    [7.17,8.10,9.30,10.55,11.51],[7.46,8.41,9.64,10.93,11.91],[7.73,8.70,9.96,11.28,12.30],
+    [7.98,8.97,10.26,11.61,12.66],[8.21,9.22,10.54,11.93,13.00],[8.43,9.46,10.81,12.23,13.33],
+    [8.63,9.69,11.07,12.52,13.64],[8.83,9.91,11.32,12.80,13.95],[9.01,10.11,11.55,13.07,14.24],
+    [9.18,10.30,11.78,13.33,14.52],[9.35,10.49,12.01,13.58,14.79],[9.52,10.67,12.22,13.83,15.06],
+    [9.68,10.85,12.43,14.07,15.32],[9.83,11.02,12.64,14.31,15.58],[9.98,11.18,12.84,14.54,15.83],
+    [10.13,11.35,13.03,14.77,16.08],[10.27,11.51,13.23,14.99,16.33],[10.41,11.67,13.42,15.21,16.57],
+    [10.55,11.83,13.61,15.43,16.81],[10.69,11.98,13.79,15.64,17.05],[10.82,12.13,13.97,15.85,17.28],
+    [10.95,12.27,14.15,16.06,17.51],[11.08,12.42,14.32,16.27,17.74],[11.20,12.56,14.49,16.47,17.96],
+    [11.33,12.70,14.66,16.67,18.18],[11.45,12.83,14.83,16.87,18.40],[11.57,12.97,14.99,17.06,18.62],
+    [11.70,13.10,15.16,17.25,18.83],[11.82,13.24,15.32,17.44,19.05],[11.94,13.37,15.49,17.63,19.26],
+    [12.06,13.51,15.65,17.82,19.47],[12.18,13.64,15.81,18.01,19.68],[12.30,13.78,15.97,18.20,19.89],
+    [12.42,13.91,16.13,18.39,20.10],[12.54,14.05,16.29,18.57,20.31],[12.66,14.18,16.46,18.76,20.53],
+    [12.78,14.32,16.62,18.95,20.74],[12.91,14.46,16.78,19.14,20.95],[13.03,14.60,16.95,19.33,21.17],
+    [13.16,14.74,17.12,19.52,21.39],[13.29,14.88,17.29,19.72,21.61],[13.41,15.03,17.46,19.92,21.84],
+    [13.55,15.18,17.63,20.12,22.07],[13.68,15.33,17.81,20.32,22.30],[13.81,15.48,17.99,20.52,22.54],
+    [13.95,15.63,18.17,20.73,22.78],[14.09,15.79,18.36,20.95,23.03],[14.22,15.95,18.55,21.16,23.28],
+    [14.37,16.11,18.74,21.38,23.53],[14.51,16.27,18.93,21.60,23.79],[14.65,16.44,19.13,21.82,24.05],
+    [14.80,16.61,19.32,22.04,24.31]
+  ]
+};
+
+/* Length/Height-for-age (cm) */
+const WHO_LEN = {
+  boy: [
+    [46.1,47.9,49.9,51.8,53.7],[50.8,52.7,54.7,56.7,58.6],[54.4,56.4,58.4,60.4,62.4],
+    [57.3,59.3,61.4,63.5,65.5],[59.7,61.8,63.9,66.0,68.0],[61.7,63.8,65.9,68.0,70.1],
+    [63.3,65.5,67.6,69.8,71.9],[64.8,67.0,69.2,71.4,73.5],[66.2,68.4,70.6,72.9,75.0],
+    [67.5,69.8,72.0,74.3,76.5],[68.7,71.0,73.3,75.6,77.9],[69.9,72.2,74.5,76.9,79.2],
+    [71.0,73.4,75.7,78.1,80.5],[72.1,74.5,76.9,79.3,81.8],[73.1,75.6,78.0,80.5,82.9],
+    [74.1,76.6,79.1,81.6,84.2],[75.0,77.6,80.2,82.7,85.3],[76.0,78.6,81.2,83.8,86.4],
+    [76.9,79.6,82.3,84.9,87.7],[77.7,80.5,83.2,85.9,88.8],[78.6,81.4,84.2,86.9,89.9],
+    [79.4,82.2,85.1,87.9,91.0],[80.2,83.1,86.0,88.9,92.0],[81.0,83.9,86.9,89.8,93.0],
+    [81.7,84.8,87.8,90.8,94.0],[82.5,85.6,88.7,91.8,95.1],[83.3,86.5,89.7,92.9,96.2],
+    [84.0,87.2,90.5,93.8,97.2],[84.7,88.0,91.3,94.6,98.2],[85.4,88.7,92.1,95.4,99.1],
+    [86.0,89.4,92.8,96.2,100.0],[86.6,90.0,93.5,96.9,100.8],[87.2,90.7,94.2,97.7,101.7],
+    [87.8,91.3,94.9,98.4,102.5],[88.4,91.9,95.6,99.2,103.4],[89.0,92.5,96.3,99.9,104.2],
+    [89.6,93.2,97.0,100.7,105.1],[90.3,94.0,97.8,101.5,106.0],[91.0,94.7,98.6,102.3,106.9],
+    [91.6,95.4,99.3,103.1,107.8],[92.2,96.1,100.0,103.9,108.6],[92.8,96.7,100.7,104.7,109.4],
+    [93.4,97.4,101.4,105.4,110.2],[94.0,98.1,102.2,106.2,111.1],[94.6,98.8,102.9,107.0,111.9],
+    [95.2,99.5,103.6,107.7,112.7],[95.9,100.1,104.3,108.5,113.5],[96.5,100.8,105.0,109.2,114.3],
+    [97.1,101.5,105.7,110.0,115.1],[97.7,102.2,106.5,110.7,115.9],[98.3,102.9,107.2,111.5,116.7],
+    [98.9,103.5,107.9,112.2,117.5],[99.5,104.2,108.6,113.0,118.3],[100.1,104.9,109.3,113.7,119.1],
+    [100.7,105.5,110.0,114.5,119.9],[101.3,106.2,110.7,115.2,120.7],[101.9,106.9,111.4,116.0,121.5],
+    [102.5,107.5,112.1,116.7,122.3],[103.1,108.2,112.8,117.5,123.1],[103.7,108.9,113.5,118.2,123.9],
+    [104.3,109.5,114.2,119.0,124.7]
+  ],
+  girl: [
+    [45.4,47.3,49.3,51.3,53.2],[49.8,51.7,53.7,55.7,57.7],[53.0,55.0,57.1,59.1,61.2],
+    [55.6,57.7,59.8,61.9,64.0],[57.8,60.0,62.1,64.3,66.5],[59.6,61.8,64.0,66.3,68.5],
+    [61.2,63.5,65.7,68.1,70.3],[62.7,65.0,67.3,69.7,72.0],[64.0,66.4,68.8,71.2,73.5],
+    [65.3,67.7,70.1,72.6,74.9],[66.5,69.0,71.5,73.9,76.3],[67.7,70.2,72.7,75.2,77.7],
+    [68.9,71.4,73.9,76.5,79.0],[69.9,72.5,75.1,77.7,80.3],[71.0,73.6,76.2,78.9,81.5],
+    [72.0,74.7,77.4,80.1,82.8],[73.0,75.7,78.5,81.2,84.0],[74.0,76.7,79.5,82.3,85.2],
+    [74.9,77.7,80.6,83.4,86.3],[75.8,78.7,81.6,84.5,87.4],[76.7,79.6,82.6,85.5,88.5],
+    [77.5,80.5,83.5,86.5,89.5],[78.4,81.4,84.4,87.4,90.5],[79.2,82.3,85.3,88.4,91.5],
+    [80.0,83.1,86.2,89.4,92.5],[80.8,84.0,87.2,90.3,93.6],[81.6,84.8,88.0,91.2,94.5],
+    [82.4,85.7,88.9,92.2,95.4],[83.1,86.5,89.8,93.1,96.4],[83.9,87.2,90.6,94.0,97.3],
+    [84.6,88.0,91.4,94.8,98.2],[85.3,88.7,92.2,95.6,99.1],[86.0,89.5,93.0,96.5,100.0],
+    [86.7,90.2,93.8,97.3,100.8],[87.4,91.0,94.6,98.1,101.7],[88.1,91.7,95.4,99.0,102.6],
+    [88.7,92.4,96.1,99.8,103.5],[89.4,93.1,96.9,100.6,104.3],[90.1,93.9,97.7,101.4,105.2],
+    [90.7,94.6,98.5,102.3,106.0],[91.4,95.3,99.2,103.1,106.9],[92.1,96.0,100.0,103.9,107.7],
+    [92.7,96.7,100.7,104.7,108.5],[93.4,97.4,101.5,105.5,109.4],[94.0,98.1,102.2,106.3,110.2],
+    [94.6,98.8,103.0,107.1,111.0],[95.3,99.5,103.7,107.9,111.9],[95.9,100.2,104.5,108.7,112.7],
+    [96.5,100.9,105.2,109.5,113.6],[97.1,101.6,106.0,110.3,114.4],[97.7,102.3,106.7,111.1,115.2],
+    [98.4,103.0,107.4,111.9,116.1],[99.0,103.7,108.2,112.7,116.9],[99.6,104.4,108.9,113.5,117.7],
+    [100.2,105.1,109.7,114.3,118.6],[100.8,105.8,110.4,115.1,119.4],[101.4,106.5,111.2,115.9,120.3],
+    [102.0,107.2,111.9,116.7,121.1],[102.7,107.9,112.7,117.6,122.0],[103.3,108.7,113.4,118.4,122.9],
+    [103.9,109.4,114.2,119.2,123.8]
+  ]
+};
+
+/* Head circumference-for-age (cm) */
+const WHO_HC = {
+  boy: [
+    [31.5,32.6,34.0,35.5,36.6],[34.9,36.0,37.4,38.8,39.8],[36.8,37.9,39.3,40.7,41.7],
+    [38.1,39.2,40.7,42.1,43.1],[39.2,40.3,41.8,43.3,44.3],[40.1,41.3,42.8,44.3,45.4],
+    [40.9,42.1,43.6,45.2,46.2],[41.6,42.8,44.4,45.9,47.0],[42.2,43.5,45.0,46.6,47.7],
+    [42.8,44.0,45.6,47.2,48.2],[43.3,44.6,46.2,47.8,48.9],[43.7,45.0,46.7,48.3,49.4],
+    [44.2,45.4,47.1,48.8,49.9],[44.5,45.9,47.6,49.3,50.4],[44.9,46.2,48.0,49.7,50.8],
+    [45.3,46.6,48.4,50.1,51.2],[45.5,46.9,48.7,50.5,51.5],[45.8,47.2,49.0,50.7,51.8],
+    [46.1,47.5,49.3,51.0,52.1],[46.3,47.7,49.5,51.3,52.4],[46.5,47.9,49.8,51.5,52.7],
+    [46.7,48.2,50.0,51.8,52.9],[46.9,48.3,50.2,52.0,53.1],[47.1,48.5,50.4,52.2,53.3],
+    [47.2,48.7,50.6,52.4,53.5],[47.4,48.9,50.8,52.6,53.7],[47.6,49.0,51.0,52.8,53.9],
+    [47.7,49.2,51.1,52.9,54.1],[47.9,49.3,51.3,53.1,54.2],[48.0,49.5,51.5,53.3,54.4],
+    [48.1,49.7,51.6,53.5,54.6],[48.3,49.8,51.8,53.6,54.8],[48.4,49.9,51.9,53.8,55.0],
+    [48.5,50.1,52.1,54.0,55.1],[48.6,50.2,52.2,54.1,55.2],[48.7,50.3,52.3,54.2,55.4],
+    [48.8,50.4,52.5,54.3,55.5],[48.9,50.5,52.6,54.5,55.6],[49.0,50.6,52.7,54.6,55.8],
+    [49.1,50.7,52.8,54.7,55.9],[49.2,50.7,52.9,54.8,56.0],[49.3,50.8,53.0,54.9,56.1],
+    [49.3,50.9,53.1,55.0,56.2],[49.4,51.0,53.1,55.1,56.3],[49.5,51.1,53.2,55.2,56.4],
+    [49.6,51.1,53.3,55.3,56.5],[49.7,51.2,53.4,55.4,56.6],[49.7,51.3,53.5,55.5,56.7],
+    [49.8,51.4,53.5,55.5,56.8],[49.9,51.5,53.6,55.6,56.9],[50.0,51.5,53.7,55.7,57.0],
+    [50.0,51.6,53.8,55.8,57.1],[50.1,51.7,53.8,55.8,57.1],[50.2,51.8,53.9,55.9,57.2],
+    [50.2,51.8,54.0,56.0,57.3],[50.3,51.9,54.0,56.1,57.4],[50.3,52.0,54.1,56.2,57.5],
+    [50.4,52.0,54.2,56.2,57.6],[50.5,52.1,54.2,56.3,57.7],[50.5,52.2,54.3,56.4,57.7],
+    [50.6,52.2,54.4,56.5,57.8]
+  ],
+  girl: [
+    [31.1,32.2,33.5,34.9,36.0],[34.3,35.3,36.7,38.1,39.2],[36.0,37.1,38.5,39.9,41.0],
+    [37.2,38.3,39.8,41.2,42.3],[38.2,39.3,40.8,42.3,43.4],[39.0,40.2,41.7,43.2,44.3],
+    [39.7,41.0,42.5,44.0,45.1],[40.4,41.7,43.2,44.7,45.9],[41.0,42.3,43.8,45.4,46.5],
+    [41.5,42.9,44.4,46.0,47.2],[42.0,43.4,44.9,46.5,47.7],[42.5,43.8,45.4,47.0,48.2],
+    [42.9,44.3,45.9,47.5,48.7],[43.3,44.7,46.3,48.0,49.2],[43.6,45.1,46.7,48.4,49.6],
+    [44.0,45.4,47.1,48.7,50.0],[44.3,45.7,47.4,49.1,50.4],[44.6,46.1,47.7,49.4,50.7],
+    [44.8,46.3,48.0,49.7,51.0],[45.1,46.6,48.3,50.0,51.3],[45.3,46.8,48.5,50.3,51.6],
+    [45.5,47.1,48.8,50.5,51.9],[45.7,47.3,49.0,50.8,52.2],[45.9,47.5,49.3,51.1,52.4],
+    [46.1,47.7,49.5,51.3,52.7],[46.3,47.9,49.7,51.5,52.9],[46.5,48.1,50.0,51.8,53.2],
+    [46.7,48.3,50.2,52.0,53.4],[46.9,48.5,50.4,52.2,53.6],[47.0,48.7,50.5,52.4,53.8],
+    [47.2,48.8,50.7,52.6,54.0],[47.3,49.0,50.9,52.8,54.2],[47.4,49.1,51.0,53.0,54.4],
+    [47.6,49.3,51.2,53.1,54.6],[47.7,49.4,51.4,53.3,54.7],[47.8,49.5,51.5,53.5,54.9],
+    [47.9,49.7,51.6,53.6,55.1],[48.0,49.8,51.8,53.8,55.2],[48.1,49.9,51.9,53.9,55.4],
+    [48.2,50.0,52.0,54.0,55.5],[48.3,50.1,52.1,54.2,55.7],[48.4,50.2,52.3,54.3,55.8],
+    [48.5,50.3,52.4,54.4,56.0],[48.6,50.4,52.5,54.6,56.1],[48.7,50.5,52.6,54.7,56.2],
+    [48.7,50.6,52.7,54.8,56.3],[48.8,50.7,52.8,54.9,56.4],[48.9,50.8,52.9,55.0,56.5],
+    [49.0,50.8,53.0,55.1,56.7],[49.1,50.9,53.1,55.2,56.8],[49.1,51.0,53.2,55.3,56.9],
+    [49.2,51.1,53.3,55.4,57.0],[49.3,51.2,53.4,55.5,57.1],[49.4,51.3,53.5,55.6,57.2],
+    [49.4,51.4,53.6,55.8,57.3],[49.5,51.5,53.7,55.9,57.4],[49.6,51.5,53.8,56.0,57.5],
+    [49.6,51.6,53.9,56.1,57.6],[49.7,51.7,54.0,56.2,57.7],[49.8,51.8,54.1,56.3,57.9],
+    [49.9,51.9,54.2,56.5,58.0]
+  ]
+};
+
+/* ── Percentile engine ── */
+// arr = [p3, p15, p50, p85, p97]
+function getPct(val, arr) {
+  const ps = [3, 15, 50, 85, 97];
+  if (val <= arr[0]) return { n: 1,  s: '<3rd' };
+  if (val >= arr[4]) return { n: 99, s: '>97th' };
+  for (let i = 0; i < 4; i++) {
+    if (val >= arr[i] && val <= arr[i + 1]) {
+      const f   = (val - arr[i]) / (arr[i + 1] - arr[i]);
+      const est = ps[i] + f * (ps[i + 1] - ps[i]);
+      return { n: Math.round(est), s: Math.round(est) + 'th' };
+    }
+  }
+  return { n: 50, s: '?' };
+}
+
+function tagInfo(n) {
+  if (n <= 2)  return { cls: 'tag-vlow',   txt: 'SGA / <P3' };
+  if (n < 10)  return { cls: 'tag-low',    txt: 'Low (P3–10)' };
+  if (n <= 90) return { cls: 'tag-normal', txt: 'Appropriate' };
+  return           { cls: 'tag-high',   txt: 'Large (>P90)' };
+}
+
+// WHO: get row by (integer) month, interpolating for fractional months
+function whoRow(table, sex, months) {
+  const rows = table[sex];
+  const lo   = Math.min(60, Math.max(0, Math.floor(months)));
+  const hi   = Math.min(60, lo + 1);
+  if (lo === hi) return rows[lo];
+  const f = months - lo;
+  return rows[lo].map((v, i) => v + f * (rows[hi][i] - v));
+}
+
+/* ── Render percentiles ── */
+function renderPct() {
+  if (!CR) return;
+  const wt  = parseFloat(document.getElementById('mwt').value);
+  const len = parseFloat(document.getElementById('mlen').value);
+  const hc  = parseFloat(document.getElementById('mhc').value);
+
+  const out = document.getElementById('pct-out');
+  if (isNaN(wt) && isNaN(len) && isNaN(hc)) { out.innerHTML = ''; return; }
+
+  const dotColor = SEX === 'boy' ? '#378ADD' : '#D4537E';
+  const { cgaWk, cgaDays, corrAgeMo, useFenton } = CR;
+
+  const measures = [
+    { name: 'Weight',             id: 'wt',  val: wt,  unit: 'kg' },
+    { name: 'Length / Height',    id: 'len', val: len, unit: 'cm' },
+    { name: 'Head Circumference', id: 'hc',  val: hc,  unit: 'cm' },
+  ];
+
+  let refLabel, refClass, refs;
+
+  if (useFenton) {
+    const wk  = Math.min(50, Math.max(22, cgaWk));
+    const row = FENTON[SEX][wk];
+    refs      = { wt: row.w, len: row.l, hc: row.h };
+    refLabel  = `Fenton 2025 · ${wk}w CGA · ${SEX === 'boy' ? 'Male' : 'Female'}`;
+    refClass  = 'fenton';
+  } else {
+    const mo  = Math.max(0, Math.min(60, corrAgeMo));
+    refs = {
+      wt:  whoRow(WHO_WT,  SEX, mo),
+      len: whoRow(WHO_LEN, SEX, mo),
+      hc:  whoRow(WHO_HC,  SEX, mo),
+    };
+    refLabel = `WHO 0–5y · Corrected age ${mo.toFixed(1)} months · ${SEX === 'boy' ? 'Male' : 'Female'}`;
+    refClass = 'who';
+  }
+
+  let html = `<div class="pct-container">
+    <div class="pct-ref-bar ${refClass}">${refLabel}</div>`;
+
+  measures.forEach(m => {
+    if (isNaN(m.val)) return;
+    const ref  = refs[m.id];
+    const p    = getPct(m.val, ref);
+    const tag  = tagInfo(p.n);
+    const pct  = Math.min(100, Math.max(0, p.n));
+    const p50  = ref[2].toFixed(1);
+
+    html += `
+    <div class="pct-item">
+      <div class="pct-top">
+        <span class="pct-name">${m.name}</span>
+        <span class="pct-right">
+          <span class="pct-measurement">${m.val} ${m.unit}</span>
+          <span class="pct-centile">${p.s} %ile</span>
+          <span class="pct-tag ${tag.cls}">${tag.txt}</span>
+        </span>
+      </div>
+      <div class="pct-bar-row">
+        <span class="pct-bar-lbl">P3</span>
+        <div class="pct-track">
+          <div class="pct-dot" style="left:${pct}%;background:${dotColor}"></div>
+        </div>
+        <span class="pct-bar-lbl">P97</span>
+        <span class="pct-50th">50th = ${p50} ${m.unit}</span>
+      </div>
+    </div>`;
+  });
+
+  html += '</div>';
+  out.innerHTML = html;
+}
+</script>
+</body>
+</html>
