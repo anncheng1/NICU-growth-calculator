@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>NICU Growth Chart · Hospital Miri</title>
+  <meta name="description" content="Fenton 2025 preterm → WHO 0–5y growth chart calculator for Hospital Miri NICU. Centiles, z-scores, growth record and PDF report." />
+  <meta name="format-detection" content="telephone=no" />
+
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
+
+  <!-- iPhone home-screen app -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Growth Chart" />
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#F2F6FB" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#161615" media="(prefers-color-scheme: dark)" />
+
+  <meta property="og:title" content="NICU Growth Chart · Hospital Miri" />
+  <meta property="og:description" content="Fenton 2025 → WHO 0–5y. Centiles, z-scores, growth record and PDF report." />
+  <meta property="og:image" content="icon-512.png" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+
+    :root {
+      --navy: #0D3B6E;
+      --blue: #1F6FC5; --blue-soft: #E6F1FB; --blue-line: #9CC5EE;
+      --pink: #C2416E; --pink-soft: #FBEAF0;
+      --green: #3B6D11; --green-soft: #EAF3DE;
+      --amber: #8A5208; --amber-soft: #FAEEDA;
+      --red: #A32D2D; --red-soft: #FCEBEB;
+      --purple: #534AB7; --purple-soft: #EEEDFE;
+      --bg: #F2F6FB;
+      --surface: #FFFFFF;
+      --surface-2: #F5F7FA;
+      --fill: #E9EDF2;
+      --text: #15181C;
+      --text-2: #55606B;
+      --text-3: #8A939C;
+      --border: rgba(15,30,50,0.10);
+      --border-2: rgba(15,30,50,0.18);
+      --shadow: 0 1px 2px rgba(15,30,50,0.05), 0 4px 14px rgba(15,30,50,0.05);
+      --radius: 16px;
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --blue: #7DB4EE; --blue-soft: #0F2742; --blue-line: #2A5C93;
+        --pink: #EE93B3; --pink-soft: #33121F;
+        --green: #9CCB5E; --green-soft: #1A2B08;
+        --amber: #EFA43A; --amber-soft: #2D1C03;
+        --red: #F29A9A; --red-soft: #2E0D0D;
+        --purple: #B3ADF0; --purple-soft: #1D1A45;
+        --bg: #161615;
+        --surface: #222220;
+        --surface-2: #2A2A28;
+        --fill: #333331;
+        --text: #ECEAE4;
+        --text-2: #B4B2A9;
+        --text-3: #85847E;
+        --border: rgba(255,255,255,0.09);
+        --border-2: rgba(255,255,255,0.16);
+        --shadow: none;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: calc(24px + var(--sab));
+    }
+    body.has-bar { padding-bottom: calc(96px + var(--sab)); }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; touch-action: manipulation; }
+    .hidden { display: none !important; }
+
+    /* ── Top bar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      padding: calc(10px + var(--sat)) max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      -webkit-backdrop-filter: saturate(180%) blur(18px);
+      backdrop-filter: saturate(180%) blur(18px);
+      border-bottom: 0.5px solid var(--border);
+    }
+    .topbar-in { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+    .logo { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; box-shadow: 0 1px 4px rgba(13,59,110,0.25); }
+    .brand h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+    .brand p { font-size: 12px; color: var(--text-2); }
+    .btn-icon {
+      margin-left: auto; min-height: 36px; padding: 0 12px;
+      border: 1px solid var(--border-2); border-radius: 999px; background: var(--surface);
+      font-size: 13px; font-weight: 600; color: var(--text-2);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-icon:active { background: var(--fill); }
+
+    /* ── Layout ── */
+    main { max-width: 720px; margin: 0 auto; padding: 16px max(14px, env(safe-area-inset-left)) 0 max(14px, env(safe-area-inset-right)); }
+    .card {
+      background: var(--surface); border-radius: var(--radius);
+      border: 0.5px solid var(--border); box-shadow: var(--shadow);
+      padding: 18px; margin-bottom: 14px;
+    }
+    .card-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+    .card-h h2 { font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-2); }
+    .card-h .sub { font-size: 12px; color: var(--text-3); }
+    .count { font-size: 12px; font-weight: 700; color: var(--blue); background: var(--blue-soft); border-radius: 999px; padding: 1px 9px; }
+
+    /* ── Segmented control ── */
+    .seg { display: flex; background: var(--fill); border-radius: 11px; padding: 3px; gap: 3px; }
+    .seg button {
+      flex: 1; min-height: 40px; border: 0; border-radius: 9px; background: transparent;
+      font-size: 14px; font-weight: 600; color: var(--text-2);
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    #sex-seg button.on[data-sex="boy"]  { color: var(--blue); }
+    #sex-seg button.on[data-sex="girl"] { color: var(--pink); }
+
+    /* ── Fields ── */
+    .grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+    .grid .full { grid-column: 1 / -1; }
+    .grid3 { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+    .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-2); margin: 0 0 6px 2px; }
+    .field input {
+      width: 100%; min-height: 46px; padding: 10px 12px;
+      font-size: 16px; /* ≥16px stops iOS auto-zoom */
+      border: 1px solid var(--border-2); border-radius: 11px;
+      background: var(--surface-2); color: var(--text);
+      -webkit-appearance: none; appearance: none;
+    }
+    .field input[type="date"] { display: block; text-align: left; }
+    .field input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+    .field input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 22%, transparent); background: var(--surface); }
+    .field input::placeholder { color: var(--text-3); }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .unit-wrap { position: relative; }
+    .unit-wrap input { padding-right: 38px; }
+    .unit-wrap span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text-3); pointer-events: none; }
+    .hint { font-size: 11.5px; color: var(--text-3); margin: 5px 0 0 2px; }
+    .note { font-size: 13px; color: var(--text-2); background: var(--surface-2); border-radius: 11px; padding: 10px 12px; margin-top: 12px; }
+    .warn { font-size: 13px; color: var(--red); background: var(--red-soft); border-radius: 11px; padding: 10px 12px; }
+
+    /* ── Age chips ── */
+    .chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 12px; }
+    .chip { background: var(--surface-2); border-radius: 12px; padding: 9px 10px; min-width: 0; }
+    .chip b { display: block; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chip span { font-size: 11px; color: var(--text-3); }
+
+    .banner { display: flex; gap: 10px; align-items: center; border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
+    .banner.fenton { background: var(--blue-soft); }
+    .banner.who { background: var(--green-soft); }
+    .banner.out { background: var(--amber-soft); }
+    .banner .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .banner.fenton .dot { background: var(--blue); } .banner.who .dot { background: var(--green); } .banner.out .dot { background: var(--amber); }
+    .banner b { display: block; font-size: 13.5px; }
+    .banner.fenton b { color: var(--blue); } .banner.who b { color: var(--green); } .banner.out b { color: var(--amber); }
+    .banner span { font-size: 12px; color: var(--text-2); }
+
+    .timeline { margin: 4px 2px 6px; }
+    .tl-track { height: 6px; border-radius: 3px; background: var(--fill); position: relative; }
+    .tl-seg { position: absolute; top: 0; height: 6px; border-radius: 3px; }
+    .tl-pre { background: #378ADD; } .tl-term { background: #639922; }
+    .tl-dot { position: absolute; top: -5px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--surface); transform: translateX(-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: left .3s; }
+    .tl-labels { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-3); margin-top: 6px; }
+
+    .divider { height: 0.5px; background: var(--border); margin: 16px -18px; }
+
+    /* ── Centile results ── */
+    .res { margin-top: 14px; border: 0.5px solid var(--border-2); border-radius: 14px; overflow: hidden; }
+    .res-ref { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 8px 12px; }
+    .res-ref.fenton { background: var(--blue-soft); color: var(--blue); }
+    .res-ref.who { background: var(--green-soft); color: var(--green); }
+    .res-ref.out { background: var(--amber-soft); color: var(--amber); }
+    .res-row { padding: 12px; border-top: 0.5px solid var(--border); }
+    .res-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+    .res-name { font-size: 13px; color: var(--text-2); font-weight: 600; margin-right: auto; }
+    .res-val { font-size: 15px; font-weight: 700; }
+    .res-p { font-size: 13px; font-weight: 700; }
+    .res-z { font-size: 12px; color: var(--text-3); }
+    .tag { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+    .t-vlow { background: var(--red-soft); color: var(--red); }
+    .t-low { background: var(--amber-soft); color: var(--amber); }
+    .t-ok { background: var(--green-soft); color: var(--green); }
+    .t-high { background: var(--purple-soft); color: var(--purple); }
+    .t-vhigh { background: var(--purple-soft); color: var(--purple); }
+    .cbar { position: relative; height: 8px; border-radius: 4px;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--red) 45%, transparent) 0 17.9%, color-mix(in srgb, var(--amber) 45%, transparent) 17.9% 28.7%, color-mix(in srgb, var(--green) 40%, transparent) 28.7% 71.3%, color-mix(in srgb, var(--purple) 40%, transparent) 71.3% 82.1%, color-mix(in srgb, var(--purple) 60%, transparent) 82.1%); }
+    .cbar i { position: absolute; top: -4px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--surface); transform: translateX(-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+    .cbar-l { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-3); margin-top: 4px; position: relative; height: 13px; }
+    .cbar-l span { position: absolute; transform: translateX(-50%); }
+    .res-foot { font-size: 11.5px; color: var(--text-3); margin-top: 6px; }
+    .res-warn { font-size: 12px; color: var(--red); margin-top: 6px; font-weight: 600; }
+
+    /* ── Buttons ── */
+    .btn {
+      min-height: 48px; border-radius: 13px; border: 0; padding: 0 16px;
+      font-size: 15.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform .08s, opacity .15s;
+    }
+    .btn:active { transform: scale(0.98); opacity: .85; }
+    .btn-primary { background: var(--blue); color: #fff; }
+    @media (prefers-color-scheme: dark) { .btn-primary { color: #0b1a2b; } }
+    .btn-pdf { background: #B42F2F; color: #fff; }
+    .btn-ghost { background: var(--fill); color: var(--text); }
+    .btn-block { width: 100%; margin-top: 14px; }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .btn-row .btn { flex: 1 1 140px; min-height: 44px; font-size: 14px; }
+
+    /* ── Growth record ── */
+    .rec { border: 0.5px solid var(--border-2); border-radius: 13px; padding: 10px 12px; margin-bottom: 8px; }
+    .rec.cur { border-style: dashed; }
+    .rec-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .rec-h b { font-size: 14px; }
+    .rec-h span { font-size: 12px; color: var(--text-3); }
+    .rec-del { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; border: 0; background: transparent; color: var(--text-3); font-size: 20px; line-height: 1; }
+    .rec-del:active { background: var(--red-soft); color: var(--red); }
+    .rec-m { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .rec-m div { background: var(--surface-2); border-radius: 9px; padding: 6px 8px; min-width: 0; }
+    .rec-m small { display: block; font-size: 10.5px; color: var(--text-3); }
+    .rec-m b { font-size: 13.5px; }
+    .rec-m em { font-style: normal; font-size: 11px; font-weight: 700; margin-left: 4px; }
+    .empty { font-size: 13.5px; color: var(--text-3); text-align: center; padding: 14px 6px; }
+    .em-vlow { color: var(--red); } .em-low { color: var(--amber); } .em-ok { color: var(--green); } .em-high, .em-vhigh { color: var(--purple); }
+
+    /* ── Chart ── */
+    .chart-wrap { position: relative; margin-top: 12px; }
+    .chart-wrap canvas { display: block; width: 100%; border-radius: 10px; touch-action: manipulation; }
+    .tip {
+      position: absolute; pointer-events: none; z-index: 2;
+      background: var(--text); color: var(--surface); font-size: 12px; line-height: 1.35;
+      border-radius: 9px; padding: 6px 9px; white-space: nowrap; transform: translate(-50%, calc(-100% - 12px));
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11.5px; color: var(--text-2); margin-top: 10px; }
+    .legend i { display: inline-block; width: 22px; vertical-align: middle; margin-right: 5px; border-top: 2px solid var(--text-3); }
+    .legend i.d { border-top-style: dashed; } .legend i.o { border-top-style: dotted; } .legend i.s { border-top-width: 3px; border-top-color: var(--text-2); }
+    .legend i.p { width: 10px; height: 10px; border: 0; border-radius: 50%; background: var(--blue); }
+
+    /* ── Bottom action bar ── */
+    .actionbar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      padding: 10px max(14px, env(safe-area-inset-right)) calc(10px + var(--sab)) max(14px, env(safe-area-inset-left));
+      background: color-mix(in srgb, var(--surface) 86%, transparent);
+      -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px);
+      border-top: 0.5px solid var(--border);
+    }
+    .actionbar-in { max-width: 720px; margin: 0 auto; display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+
+    /* ── Sheet ── */
+    .sheet-bg { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.35); display: flex; align-items: flex-end; justify-content: center; }
+    .sheet {
+      width: 100%; max-width: 520px; background: var(--surface);
+      border-radius: 20px 20px 0 0; padding: 10px 18px calc(18px + var(--sab));
+      animation: up .22s ease-out;
+    }
+    @media (min-width: 600px) { .sheet-bg { align-items: center; } .sheet { border-radius: 20px; } }
+    @keyframes up { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .grab { width: 38px; height: 5px; border-radius: 3px; background: var(--fill); margin: 0 auto 14px; }
+    .sheet h3 { font-size: 18px; margin-bottom: 2px; }
+    .sheet p { font-size: 13px; color: var(--text-2); }
+    .sheet-prev { display: flex; gap: 8px; overflow-x: auto; padding: 14px 0; }
+    .sheet-prev img { height: 190px; border-radius: 6px; border: 0.5px solid var(--border-2); background: #fff; flex-shrink: 0; }
+    .sheet .btn { width: 100%; margin-top: 8px; }
+    .btn-link { background: transparent; color: var(--text-2); min-height: 44px; }
+
+    /* ── Patients sheet ── */
+    .psheet { max-height: 88vh; display: flex; flex-direction: column; }
+    .ps-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .sheet .ps-new { width: auto; margin: 0; min-height: 40px; font-size: 14px; padding: 0 14px; }
+    .ps-search { width: 100%; min-height: 42px; font-size: 16px; padding: 8px 12px; border-radius: 11px; border: 1px solid var(--border-2); background: var(--surface-2); color: var(--text); -webkit-appearance: none; margin-bottom: 8px; }
+    .ps-list { overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1 1 auto; min-height: 70px; }
+    .ps-item { display: flex; align-items: center; gap: 10px; padding: 10px 6px 10px 10px; border-radius: 13px; border: 0.5px solid var(--border-2); margin-bottom: 8px; cursor: pointer; }
+    .ps-item:active { background: var(--fill); }
+    .ps-item.on { border-color: var(--blue); background: var(--blue-soft); }
+    .ps-av { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; }
+    .ps-av.boy { background: var(--blue-soft); color: var(--blue); } .ps-av.girl { background: var(--pink-soft); color: var(--pink); }
+    .ps-item.on .ps-av { background: var(--surface); }
+    .ps-txt { min-width: 0; flex: 1; }
+    .ps-txt b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ps-txt span { display: block; font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ps-del { width: 36px; height: 36px; border-radius: 50%; border: 0; background: transparent; color: var(--text-3); font-size: 20px; flex-shrink: 0; }
+    .ps-del:active { background: var(--red-soft); color: var(--red); }
+    .ps-note { font-size: 12px; color: var(--text-3); margin: 6px 2px 2px; }
+    .link-btn { border: 0; background: transparent; color: var(--blue); font-size: 13.5px; font-weight: 600; padding: 4px 0; min-height: 32px; }
+    .pc { font-size: 11.5px; font-weight: 700; color: var(--blue); background: var(--blue-soft); border-radius: 999px; padding: 0 7px; }
+
+    /* ── About (collapsed) ── */
+    .about { margin: 6px 2px 0; }
+    .about summary { list-style: none; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-3); text-align: center; padding: 10px; }
+    .about summary::-webkit-details-marker { display: none; }
+    .about[open] summary { color: var(--text-2); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; left: 50%; bottom: calc(100px + var(--sab)); z-index: 60; transform: translateX(-50%);
+      background: var(--text); color: var(--surface); font-size: 14px; font-weight: 600;
+      padding: 10px 16px; border-radius: 999px; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90vw; text-align: center;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ── Info / footer ── */
+    .info { font-size: 12.5px; color: var(--text-2); line-height: 1.6; padding: 4px 4px 0; }
+    .info b { color: var(--text); }
+    .info p + p { margin-top: 8px; }
+    .foot { text-align: center; font-size: 11.5px; color: var(--text-3); margin: 22px 0 8px; }
+
+    @media (max-width: 440px) {
+      .chips { grid-template-columns: repeat(2, 1fr); }
+      .grid { grid-template-columns: 1fr; }
+      .grid3 { grid-template-columns: 1fr 1fr; }
+      .brand p { display: none; }
+      .btn-icon .lbl { display: none; }
+      .grid3 .field:first-child { grid-column: 1 / -1; }
+      .card { padding: 16px; }
+      .divider { margin: 14px -16px; }
+    }
+    @media (min-width: 760px) { body.has-bar { padding-bottom: calc(96px + var(--sab)); } }
+
+    /* ── Print: only the rendered A4 report pages ── */
+    #print-pages { display: none; }
+    @media print {
+      @page { size: A4 portrait; margin: 0; }
+      body { background: #fff !important; padding: 0 !important; }
+      body > *:not(#print-pages) { display: none !important; }
+      #print-pages { display: block !important; }
+      #print-pages img { display: block; width: 210mm; height: 297mm; page-break-after: always; break-after: page; }
+      #print-pages img:last-child { page-break-after: auto; break-after: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <img class="logo" alt="" src="data:image/jpeg;base64,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" />
+    <div class="brand">
+      <h1>Growth Chart</h1>
+      <p>Hospital Miri NICU · Fenton 2025 → WHO</p>
+    </div>
+    <button class="btn-icon" id="btn-patients" type="button" aria-label="Patients on this device">👶 Patients <span class="pc" id="pt-count">0</span></button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Patient -->
+  <section class="card">
+    <div class="card-h"><h2>Patient</h2><button class="link-btn" id="btn-switch" type="button">Switch / new ›</button></div>
+    <div class="grid">
+      <div class="field full">
+        <label for="pt-name">Name / RN <span style="font-weight:400;color:var(--text-3)">(identifies the patient on this device and report)</span></label>
+        <input id="pt-name" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="e.g. Baby of Siti · RN 123456" />
+      </div>
+      <div class="full">
+        <div class="seg" id="sex-seg" role="radiogroup" aria-label="Sex">
+          <button type="button" data-sex="boy" role="radio">♂ Male</button>
+          <button type="button" data-sex="girl" role="radio">♀ Female</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="dob">Date of birth</label>
+        <input id="dob" type="date" />
+      </div>
+      <div class="field">
+        <label>GA at birth</label>
+        <div class="pair">
+          <div class="unit-wrap"><input id="ga-wk" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="28" aria-label="Weeks" /><span>w</span></div>
+          <div class="unit-wrap"><input id="ga-dy" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" placeholder="0" aria-label="Days" /><span>d</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="note" id="patient-hint">Enter date of birth and gestational age (22–44 weeks) to start.</p>
+  </section>
+
+  <!-- Assessment -->
+  <section class="card hidden" id="assess-card">
+    <div class="card-h"><h2>Measurement</h2><span class="sub" id="assess-sub"></span></div>
+    <div class="field">
+      <label for="m-date">Measurement date</label>
+      <input id="m-date" type="date" />
+    </div>
+
+    <div class="chips" id="chips"></div>
+    <div class="banner" id="banner"><i class="dot"></i><div><b id="banner-title"></b><span id="banner-sub"></span></div></div>
+    <div class="timeline" id="timeline">
+      <div class="tl-track">
+        <div class="tl-seg tl-pre" id="tl-pre"></div>
+        <div class="tl-seg tl-term" id="tl-term"></div>
+        <div class="tl-dot" id="tl-dot"></div>
+      </div>
+      <div class="tl-labels"><span>22w</span><span>40w term</span><span>50w → WHO</span></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="grid3">
+      <div class="field">
+        <label for="m-wt">Weight</label>
+        <div class="unit-wrap"><input id="m-wt" type="text" inputmode="decimal" autocomplete="off" placeholder="1.450 or 1450" /><span id="wt-unit">kg</span></div>
+      </div>
+      <div class="field">
+        <label for="m-len">Length</label>
+        <div class="unit-wrap"><input id="m-len" type="text" inputmode="decimal" autocomplete="off" placeholder="38.5" /><span>cm</span></div>
+      </div>
+      <div class="field">
+        <label for="m-hc">Head circ.</label>
+        <div class="unit-wrap"><input id="m-hc" type="text" inputmode="decimal" autocomplete="off" placeholder="27.0" /><span>cm</span></div>
+      </div>
+    </div>
+    <p class="hint">Weight accepts kg or grams — values above 30 are read as grams.</p>
+
+    <div id="pct-out"></div>
+    <button class="btn btn-primary btn-block" id="btn-save" type="button">＋ Save to growth record</button>
+  </section>
+
+  <!-- Growth record -->
+  <section class="card hidden" id="rec-card">
+    <div class="card-h"><h2>Growth record</h2><span class="count" id="rec-count">0</span></div>
+    <div id="rec-list"></div>
+  </section>
+
+  <!-- Chart -->
+  <section class="card hidden" id="chart-card">
+    <div class="card-h"><h2>Growth chart</h2><span class="sub">Tap a point for details</span></div>
+    <div class="seg" id="tab-seg">
+      <button type="button" data-tab="wt" class="on">Weight</button>
+      <button type="button" data-tab="len">Length</button>
+      <button type="button" data-tab="hc">Head circ.</button>
+    </div>
+    <div class="chart-wrap" id="chart-wrap">
+      <canvas id="chart" aria-label="Growth chart"></canvas>
+      <div class="tip hidden" id="tip"></div>
+    </div>
+    <div class="legend">
+      <span><i class="d"></i>P3 / P97</span>
+      <span><i class="o"></i>P15 / P85</span>
+      <span><i class="s"></i>P50</span>
+      <span><i class="p" id="legend-dot"></i>Patient</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-pdf" id="btn-pdf2" type="button">⬇ PDF report</button>
+      <button class="btn btn-ghost" id="btn-img" type="button">🖼 Chart image</button>
+      <button class="btn btn-ghost" id="btn-print" type="button">🖨 Print</button>
+    </div>
+  </section>
+
+  <details class="about">
+  <summary>About &amp; references ▾</summary>
+  <section class="info">
+    <p><b>Chart selection.</b> Fenton 2025 is used while corrected gestational age (CGA) is ≤ 50 weeks; after that the WHO Child Growth Standards (0–5 y) are used by corrected age (CGA − 40 weeks).</p>
+    <p><b>Centiles &amp; z-scores</b> are estimated by interpolating between the P3, P15, P50, P85 and P97 curves (and between weeks/months). Values beyond P3/P97 are extrapolated — treat them as approximate.</p>
+    <p><b>Data</b> are saved only on this device (no server). Use <b>Patients → Back up</b> to keep a copy or move patients to another phone.</p>
+    <p><b>References.</b> Fenton TR et al., third-generation preterm growth chart, 2025 (fentongrowth.ca). WHO Multicentre Growth Reference Study Group, <i>Acta Paediatrica</i> 2006; Suppl 450.</p>
+  </section>
+  </details>
+
+  <div class="foot">Hospital Miri NICU · Department of Paediatrics &amp; Neonatology, Sarawak<br />For clinical reference only — verify against printed charts</div>
+</main>
+
+<!-- Bottom action bar -->
+<div class="actionbar hidden" id="actionbar">
+  <div class="actionbar-in">
+    <button class="btn btn-primary" id="ab-save" type="button">＋ Save measurement</button>
+    <button class="btn btn-pdf" id="ab-pdf" type="button">⬇ PDF</button>
+  </div>
+</div>
+
+<!-- Export sheet -->
+<div class="sheet-bg hidden" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3 id="sheet-title">PDF report ready</h3>
+    <p id="sheet-info"></p>
+    <div class="sheet-prev" id="sheet-prev"></div>
+    <button class="btn btn-primary" id="sh-share" type="button">Share / Save to Files</button>
+    <button class="btn btn-ghost" id="sh-open" type="button">Open PDF</button>
+    <button class="btn btn-ghost" id="sh-dl" type="button">Download</button>
+    <button class="btn btn-link" id="sh-close" type="button">Close</button>
+  </div>
+</div>
+
+<!-- Patients sheet -->
+<div class="sheet-bg hidden" id="psheet" role="dialog" aria-modal="true" aria-labelledby="psheet-title">
+  <div class="sheet psheet">
+    <div class="grab"></div>
+    <div class="ps-h"><h3 id="psheet-title">Patients</h3><button class="btn btn-primary ps-new" id="ps-new" type="button">＋ New patient</button></div>
+    <input id="ps-search" class="ps-search hidden" type="search" placeholder="Search name / RN" autocomplete="off" />
+    <div class="ps-list" id="ps-list"></div>
+    <p class="ps-note">Saved only on this device. Add the app to the Home Screen and back up regularly.</p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="ps-backup" type="button">⬇ Back up all</button>
+      <button class="btn btn-ghost" id="ps-restore" type="button">⬆ Restore</button>
+    </div>
+    <input type="file" id="restore-file" accept=".json,application/json" hidden />
+    <button class="btn btn-link" id="ps-close" type="button">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="print-pages"></div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════════════════
+   REFERENCE DATA  [p3, p15, p50, p85, p97]
+   Fenton 2025 (22–50 w CGA) · WHO 2006 (0–60 months)
+   ═══════════════════════════════════════════════════════════════════════ */
+const FENTON = {
+  boy: {
+    22:{w:[0.36,0.42,0.50,0.60,0.69],l:[24.5,26.0,27.5,29.0,31.3],h:[18.0,19.3,20.7,22.1,23.4]},
+    23:{w:[0.41,0.48,0.57,0.69,0.79],l:[26.0,27.5,29.2,30.9,33.1],h:[19.0,20.3,21.8,23.2,24.7]},
+    24:{w:[0.47,0.56,0.66,0.80,0.92],l:[27.5,29.0,30.8,32.7,34.9],h:[20.0,21.3,22.9,24.5,25.9]},
+    25:{w:[0.54,0.65,0.77,0.93,1.07],l:[28.9,30.5,32.4,34.3,36.7],h:[21.0,22.4,24.0,25.6,27.1]},
+    26:{w:[0.63,0.76,0.89,1.08,1.24],l:[30.2,31.9,33.9,35.9,38.4],h:[22.0,23.4,25.1,26.8,28.3]},
+    27:{w:[0.74,0.88,1.04,1.26,1.45],l:[31.5,33.2,35.3,37.4,40.0],h:[22.9,24.4,26.1,27.9,29.4]},
+    28:{w:[0.86,1.02,1.20,1.45,1.67],l:[32.7,34.6,36.7,38.9,41.5],h:[23.8,25.3,27.1,29.0,30.5]},
+    29:{w:[0.99,1.17,1.38,1.67,1.92],l:[33.9,35.8,38.0,40.3,43.0],h:[24.7,26.2,28.0,29.9,31.5]},
+    30:{w:[1.15,1.35,1.59,1.92,2.20],l:[35.0,37.0,39.3,41.7,44.4],h:[25.5,27.1,28.9,30.9,32.5]},
+    31:{w:[1.32,1.55,1.83,2.21,2.52],l:[36.1,38.1,40.5,43.0,45.7],h:[26.3,27.9,29.8,31.8,33.4]},
+    32:{w:[1.51,1.78,2.09,2.52,2.86],l:[37.2,39.3,41.7,44.2,47.0],h:[27.1,28.7,30.6,32.7,34.3]},
+    33:{w:[1.72,2.02,2.37,2.86,3.24],l:[38.2,40.3,42.8,45.4,48.2],h:[27.9,29.6,31.5,33.6,35.2]},
+    34:{w:[1.95,2.29,2.68,3.23,3.65],l:[39.2,41.4,43.9,46.5,49.4],h:[28.7,30.4,32.3,34.4,36.1]},
+    35:{w:[2.19,2.57,3.00,3.62,4.08],l:[40.1,42.3,44.9,47.6,50.5],h:[29.5,31.2,33.2,35.3,37.0]},
+    36:{w:[2.44,2.86,3.34,4.03,4.53],l:[41.0,43.3,45.9,48.7,51.6],h:[30.3,32.0,34.0,36.2,37.9]},
+    37:{w:[2.71,3.17,3.69,4.45,5.00],l:[41.9,44.2,46.8,49.7,52.6],h:[31.1,32.8,34.8,37.1,38.7]},
+    38:{w:[2.97,3.47,4.04,4.87,5.46],l:[42.8,45.1,47.8,50.7,53.6],h:[31.9,33.6,35.6,37.9,39.5]},
+    39:{w:[3.20,3.75,4.35,5.25,5.88],l:[43.7,46.0,48.7,51.7,54.6],h:[32.7,34.4,36.5,38.8,40.4]},
+    40:{w:[3.39,3.98,4.62,5.58,6.25],l:[44.6,47.0,49.7,52.7,55.6],h:[33.4,35.2,37.3,39.6,41.2]},
+    41:{w:[3.56,4.18,4.85,5.86,6.56],l:[45.4,47.8,50.6,53.7,56.6],h:[34.1,35.9,38.0,40.4,42.0]},
+    42:{w:[3.69,4.34,5.04,6.10,6.82],l:[46.1,48.6,51.4,54.5,57.5],h:[34.7,36.6,38.7,41.1,42.7]},
+    43:{w:[3.81,4.48,5.20,6.30,7.04],l:[46.7,49.2,52.1,55.2,58.3],h:[35.3,37.2,39.3,41.8,43.4]},
+    44:{w:[3.91,4.60,5.34,6.48,7.23],l:[47.2,49.8,52.7,55.9,59.0],h:[35.8,37.7,39.9,42.4,44.0]},
+    45:{w:[4.00,4.71,5.47,6.65,7.41],l:[47.6,50.2,53.2,56.5,59.6],h:[36.3,38.2,40.4,43.0,44.6]},
+    46:{w:[4.08,4.81,5.58,6.80,7.57],l:[47.9,50.6,53.7,57.0,60.2],h:[36.8,38.7,40.9,43.5,45.1]},
+    47:{w:[4.16,4.90,5.69,6.94,7.72],l:[48.2,51.0,54.1,57.5,60.7],h:[37.2,39.2,41.4,44.0,45.6]},
+    48:{w:[4.23,4.98,5.79,7.07,7.86],l:[48.5,51.3,54.5,57.9,61.1],h:[37.6,39.6,41.8,44.4,46.1]},
+    49:{w:[4.30,5.07,5.89,7.20,7.99],l:[48.8,51.6,54.8,58.3,61.5],h:[38.0,40.0,42.2,44.8,46.5]},
+    50:{w:[4.36,5.15,5.98,7.31,8.12],l:[49.1,51.9,55.1,58.6,61.9],h:[38.3,40.4,42.6,45.2,46.9]},
+  },
+  girl: {
+    22:{w:[0.34,0.40,0.47,0.56,0.65],l:[23.5,25.0,26.5,28.2,30.0],h:[17.5,18.7,20.0,21.4,22.7]},
+    23:{w:[0.39,0.46,0.54,0.65,0.74],l:[25.0,26.5,28.1,29.8,31.8],h:[18.5,19.7,21.1,22.5,23.9]},
+    24:{w:[0.44,0.53,0.62,0.74,0.86],l:[26.5,28.0,29.7,31.5,33.6],h:[19.4,20.7,22.2,23.7,25.1]},
+    25:{w:[0.51,0.61,0.72,0.86,1.00],l:[27.8,29.4,31.2,33.1,35.3],h:[20.3,21.7,23.2,24.8,26.2]},
+    26:{w:[0.59,0.71,0.84,1.01,1.17],l:[29.1,30.7,32.7,34.7,37.0],h:[21.2,22.6,24.2,25.8,27.3]},
+    27:{w:[0.69,0.82,0.97,1.17,1.36],l:[30.4,32.1,34.1,36.2,38.6],h:[22.1,23.5,25.1,26.8,28.3]},
+    28:{w:[0.79,0.95,1.12,1.35,1.57],l:[31.6,33.4,35.5,37.7,40.1],h:[22.9,24.3,26.0,27.7,29.2]},
+    29:{w:[0.92,1.10,1.29,1.56,1.81],l:[32.8,34.6,36.8,39.1,41.6],h:[23.7,25.2,26.9,28.7,30.2]},
+    30:{w:[1.06,1.26,1.48,1.80,2.07],l:[33.9,35.8,38.1,40.5,43.0],h:[24.5,26.0,27.7,29.6,31.1]},
+    31:{w:[1.22,1.45,1.70,2.06,2.37],l:[35.0,37.0,39.3,41.8,44.3],h:[25.3,26.8,28.6,30.5,32.0]},
+    32:{w:[1.40,1.65,1.94,2.35,2.71],l:[36.1,38.1,40.5,43.1,45.6],h:[26.1,27.6,29.4,31.4,32.8]},
+    33:{w:[1.59,1.88,2.21,2.67,3.08],l:[37.1,39.2,41.6,44.2,46.8],h:[26.9,28.5,30.3,32.3,33.7]},
+    34:{w:[1.81,2.13,2.50,3.02,3.48],l:[38.1,40.2,42.7,45.3,47.9],h:[27.7,29.3,31.1,33.2,34.6]},
+    35:{w:[2.04,2.40,2.81,3.40,3.91],l:[39.0,41.2,43.7,46.4,49.0],h:[28.5,30.1,31.9,34.0,35.4]},
+    36:{w:[2.26,2.67,3.12,3.77,4.34],l:[39.8,42.0,44.6,47.4,50.1],h:[29.2,30.9,32.7,34.8,36.2]},
+    37:{w:[2.49,2.94,3.44,4.16,4.79],l:[40.6,42.9,45.6,48.4,51.2],h:[30.0,31.7,33.5,35.7,37.1]},
+    38:{w:[2.72,3.22,3.76,4.55,5.22],l:[41.5,43.8,46.5,49.4,52.1],h:[30.8,32.4,34.3,36.5,37.9]},
+    39:{w:[2.93,3.47,4.05,4.91,5.64],l:[42.3,44.6,47.3,50.3,53.0],h:[31.5,33.2,35.1,37.3,38.7]},
+    40:{w:[3.11,3.69,4.31,5.23,6.00],l:[43.1,45.5,48.2,51.2,53.9],h:[32.2,33.9,35.8,38.1,39.5]},
+    41:{w:[3.27,3.88,4.54,5.51,6.33],l:[43.9,46.3,49.1,52.1,54.8],h:[32.9,34.6,36.5,38.8,40.2]},
+    42:{w:[3.42,4.06,4.74,5.76,6.61],l:[44.7,47.1,49.9,53.0,55.7],h:[33.6,35.3,37.2,39.5,40.9]},
+    43:{w:[3.55,4.22,4.92,5.98,6.86],l:[45.4,47.9,50.7,53.8,56.6],h:[34.2,36.0,37.9,40.2,41.6]},
+    44:{w:[3.65,4.35,5.08,6.19,7.08],l:[46.0,48.6,51.5,54.6,57.4],h:[34.8,36.6,38.5,40.9,42.3]},
+    45:{w:[3.75,4.47,5.22,6.38,7.28],l:[46.6,49.2,52.2,55.3,58.2],h:[35.4,37.2,39.1,41.5,42.9]},
+    46:{w:[3.83,4.57,5.35,6.56,7.46],l:[47.1,49.8,52.8,56.0,58.9],h:[35.9,37.7,39.7,42.1,43.5]},
+    47:{w:[3.91,4.67,5.47,6.73,7.63],l:[47.6,50.3,53.4,56.6,59.5],h:[36.4,38.2,40.2,42.7,44.1]},
+    48:{w:[3.99,4.76,5.58,6.89,7.79],l:[48.0,50.8,53.9,57.1,60.2],h:[36.9,38.7,40.7,43.2,44.7]},
+    49:{w:[4.06,4.85,5.68,7.04,7.93],l:[48.4,51.2,54.4,57.7,60.7],h:[37.3,39.2,41.2,43.7,45.2]},
+    50:{w:[4.12,4.94,5.78,7.18,8.07],l:[48.8,51.7,54.8,58.2,61.3],h:[37.7,39.6,41.7,44.2,45.7]},
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   WHO 0–60 MONTHS
+   All tables: [p3, p15, p50, p85, p97] at every month 0–60
+   Weight-for-age, Length/Height-for-age, Head Circumference-for-age
+   Source: WHO Child Growth Standards, 2006
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Weight-for-age (kg) */
+const WHO_WT = {
+  boy: [
+    [2.50,2.97,3.53,4.13,4.65],[3.43,4.00,4.76,5.57,6.17],[4.37,5.02,5.93,6.88,7.57],
+    [5.12,5.82,6.82,7.87,8.62],[5.71,6.45,7.50,8.60,9.39],[6.18,6.94,8.02,9.16,9.98],
+    [6.57,7.35,8.46,9.63,10.49],[6.90,7.70,8.83,10.03,10.91],[7.18,7.99,9.15,10.38,11.29],
+    [7.43,8.25,9.43,10.69,11.62],[7.65,8.49,9.68,10.96,11.91],[7.84,8.69,9.91,11.21,12.18],
+    [8.02,8.88,10.11,11.44,12.43],[8.18,9.05,10.30,11.65,12.66],[8.34,9.22,10.49,11.86,12.88],
+    [8.48,9.37,10.66,12.05,13.09],[8.62,9.52,10.83,12.24,13.30],[8.75,9.67,10.99,12.43,13.50],
+    [8.88,9.80,11.15,12.61,13.70],[9.00,9.93,11.30,12.79,13.89],[9.12,10.07,11.46,12.96,14.08],
+    [9.24,10.20,11.61,13.13,14.27],[9.35,10.32,11.75,13.30,14.45],[9.46,10.45,11.90,13.47,14.63],
+    [9.57,10.57,12.04,13.63,14.81],[9.68,10.69,12.17,13.79,14.99],[9.78,10.80,12.31,13.95,15.17],
+    [9.89,10.92,12.44,14.11,15.35],[9.99,11.03,12.57,14.26,15.52],[10.09,11.14,12.70,14.41,15.70],
+    [10.19,11.25,12.83,14.56,15.87],[10.29,11.36,12.96,14.71,16.04],[10.38,11.46,13.08,14.86,16.21],
+    [10.48,11.57,13.20,15.00,16.38],[10.57,11.67,13.33,15.14,16.55],[10.66,11.77,13.45,15.28,16.72],
+    [10.76,11.88,13.57,15.43,16.89],[10.85,11.98,13.69,15.57,17.06],[10.94,12.08,13.82,15.71,17.22],
+    [11.03,12.18,13.94,15.85,17.39],[11.12,12.28,14.06,15.99,17.56],[11.21,12.38,14.19,16.13,17.73],
+    [11.30,12.49,14.32,16.27,17.90],[11.39,12.59,14.45,16.42,18.07],[11.48,12.70,14.58,16.57,18.25],
+    [11.57,12.80,14.71,16.72,18.42],[11.66,12.91,14.84,16.87,18.60],[11.75,13.02,14.98,17.02,18.78],
+    [11.85,13.13,15.12,17.18,18.97],[11.94,13.24,15.26,17.33,19.16],[12.04,13.36,15.41,17.49,19.35],
+    [12.14,13.47,15.56,17.65,19.55],[12.23,13.59,15.71,17.82,19.74],[12.33,13.70,15.86,17.98,19.94],
+    [12.43,13.82,16.01,18.15,20.14],[12.53,13.94,16.17,18.32,20.34],[12.63,14.07,16.33,18.49,20.55],
+    [12.74,14.19,16.49,18.67,20.76],[12.84,14.32,16.65,18.85,20.97],[12.95,14.45,16.82,19.03,21.19],
+    [13.06,14.58,16.99,19.22,21.41]
+  ],
+  girl: [
+    [2.36,2.82,3.35,3.93,4.42],[3.16,3.73,4.45,5.20,5.79],[3.94,4.61,5.45,6.33,7.02],
+    [4.62,5.37,6.30,7.28,8.04],[5.19,5.99,6.99,8.03,8.83],[5.68,6.52,7.56,8.65,9.49],
+    [6.12,6.99,8.08,9.21,10.08],[6.51,7.40,8.53,9.70,10.60],[6.86,7.77,8.94,10.15,11.08],
+    [7.17,8.10,9.30,10.55,11.51],[7.46,8.41,9.64,10.93,11.91],[7.73,8.70,9.96,11.28,12.30],
+    [7.98,8.97,10.26,11.61,12.66],[8.21,9.22,10.54,11.93,13.00],[8.43,9.46,10.81,12.23,13.33],
+    [8.63,9.69,11.07,12.52,13.64],[8.83,9.91,11.32,12.80,13.95],[9.01,10.11,11.55,13.07,14.24],
+    [9.18,10.30,11.78,13.33,14.52],[9.35,10.49,12.01,13.58,14.79],[9.52,10.67,12.22,13.83,15.06],
+    [9.68,10.85,12.43,14.07,15.32],[9.83,11.02,12.64,14.31,15.58],[9.98,11.18,12.84,14.54,15.83],
+    [10.13,11.35,13.03,14.77,16.08],[10.27,11.51,13.23,14.99,16.33],[10.41,11.67,13.42,15.21,16.57],
+    [10.55,11.83,13.61,15.43,16.81],[10.69,11.98,13.79,15.64,17.05],[10.82,12.13,13.97,15.85,17.28],
+    [10.95,12.27,14.15,16.06,17.51],[11.08,12.42,14.32,16.27,17.74],[11.20,12.56,14.49,16.47,17.96],
+    [11.33,12.70,14.66,16.67,18.18],[11.45,12.83,14.83,16.87,18.40],[11.57,12.97,14.99,17.06,18.62],
+    [11.70,13.10,15.16,17.25,18.83],[11.82,13.24,15.32,17.44,19.05],[11.94,13.37,15.49,17.63,19.26],
+    [12.06,13.51,15.65,17.82,19.47],[12.18,13.64,15.81,18.01,19.68],[12.30,13.78,15.97,18.20,19.89],
+    [12.42,13.91,16.13,18.39,20.10],[12.54,14.05,16.29,18.57,20.31],[12.66,14.18,16.46,18.76,20.53],
+    [12.78,14.32,16.62,18.95,20.74],[12.91,14.46,16.78,19.14,20.95],[13.03,14.60,16.95,19.33,21.17],
+    [13.16,14.74,17.12,19.52,21.39],[13.29,14.88,17.29,19.72,21.61],[13.41,15.03,17.46,19.92,21.84],
+    [13.55,15.18,17.63,20.12,22.07],[13.68,15.33,17.81,20.32,22.30],[13.81,15.48,17.99,20.52,22.54],
+    [13.95,15.63,18.17,20.73,22.78],[14.09,15.79,18.36,20.95,23.03],[14.22,15.95,18.55,21.16,23.28],
+    [14.37,16.11,18.74,21.38,23.53],[14.51,16.27,18.93,21.60,23.79],[14.65,16.44,19.13,21.82,24.05],
+    [14.80,16.61,19.32,22.04,24.31]
+  ]
+};
+
+/* Length/Height-for-age (cm) */
+const WHO_LEN = {
+  boy: [
+    [46.1,47.9,49.9,51.8,53.7],[50.8,52.7,54.7,56.7,58.6],[54.4,56.4,58.4,60.4,62.4],
+    [57.3,59.3,61.4,63.5,65.5],[59.7,61.8,63.9,66.0,68.0],[61.7,63.8,65.9,68.0,70.1],
+    [63.3,65.5,67.6,69.8,71.9],[64.8,67.0,69.2,71.4,73.5],[66.2,68.4,70.6,72.9,75.0],
+    [67.5,69.8,72.0,74.3,76.5],[68.7,71.0,73.3,75.6,77.9],[69.9,72.2,74.5,76.9,79.2],
+    [71.0,73.4,75.7,78.1,80.5],[72.1,74.5,76.9,79.3,81.8],[73.1,75.6,78.0,80.5,82.9],
+    [74.1,76.6,79.1,81.6,84.2],[75.0,77.6,80.2,82.7,85.3],[76.0,78.6,81.2,83.8,86.4],
+    [76.9,79.6,82.3,84.9,87.7],[77.7,80.5,83.2,85.9,88.8],[78.6,81.4,84.2,86.9,89.9],
+    [79.4,82.2,85.1,87.9,91.0],[80.2,83.1,86.0,88.9,92.0],[81.0,83.9,86.9,89.8,93.0],
+    [81.7,84.8,87.8,90.8,94.0],[82.5,85.6,88.7,91.8,95.1],[83.3,86.5,89.7,92.9,96.2],
+    [84.0,87.2,90.5,93.8,97.2],[84.7,88.0,91.3,94.6,98.2],[85.4,88.7,92.1,95.4,99.1],
+    [86.0,89.4,92.8,96.2,100.0],[86.6,90.0,93.5,96.9,100.8],[87.2,90.7,94.2,97.7,101.7],
+    [87.8,91.3,94.9,98.4,102.5],[88.4,91.9,95.6,99.2,103.4],[89.0,92.5,96.3,99.9,104.2],
+    [89.6,93.2,97.0,100.7,105.1],[90.3,94.0,97.8,101.5,106.0],[91.0,94.7,98.6,102.3,106.9],
+    [91.6,95.4,99.3,103.1,107.8],[92.2,96.1,100.0,103.9,108.6],[92.8,96.7,100.7,104.7,109.4],
+    [93.4,97.4,101.4,105.4,110.2],[94.0,98.1,102.2,106.2,111.1],[94.6,98.8,102.9,107.0,111.9],
+    [95.2,99.5,103.6,107.7,112.7],[95.9,100.1,104.3,108.5,113.5],[96.5,100.8,105.0,109.2,114.3],
+    [97.1,101.5,105.7,110.0,115.1],[97.7,102.2,106.5,110.7,115.9],[98.3,102.9,107.2,111.5,116.7],
+    [98.9,103.5,107.9,112.2,117.5],[99.5,104.2,108.6,113.0,118.3],[100.1,104.9,109.3,113.7,119.1],
+    [100.7,105.5,110.0,114.5,119.9],[101.3,106.2,110.7,115.2,120.7],[101.9,106.9,111.4,116.0,121.5],
+    [102.5,107.5,112.1,116.7,122.3],[103.1,108.2,112.8,117.5,123.1],[103.7,108.9,113.5,118.2,123.9],
+    [104.3,109.5,114.2,119.0,124.7]
+  ],
+  girl: [
+    [45.4,47.3,49.3,51.3,53.2],[49.8,51.7,53.7,55.7,57.7],[53.0,55.0,57.1,59.1,61.2],
+    [55.6,57.7,59.8,61.9,64.0],[57.8,60.0,62.1,64.3,66.5],[59.6,61.8,64.0,66.3,68.5],
+    [61.2,63.5,65.7,68.1,70.3],[62.7,65.0,67.3,69.7,72.0],[64.0,66.4,68.8,71.2,73.5],
+    [65.3,67.7,70.1,72.6,74.9],[66.5,69.0,71.5,73.9,76.3],[67.7,70.2,72.7,75.2,77.7],
+    [68.9,71.4,73.9,76.5,79.0],[69.9,72.5,75.1,77.7,80.3],[71.0,73.6,76.2,78.9,81.5],
+    [72.0,74.7,77.4,80.1,82.8],[73.0,75.7,78.5,81.2,84.0],[74.0,76.7,79.5,82.3,85.2],
+    [74.9,77.7,80.6,83.4,86.3],[75.8,78.7,81.6,84.5,87.4],[76.7,79.6,82.6,85.5,88.5],
+    [77.5,80.5,83.5,86.5,89.5],[78.4,81.4,84.4,87.4,90.5],[79.2,82.3,85.3,88.4,91.5],
+    [80.0,83.1,86.2,89.4,92.5],[80.8,84.0,87.2,90.3,93.6],[81.6,84.8,88.0,91.2,94.5],
+    [82.4,85.7,88.9,92.2,95.4],[83.1,86.5,89.8,93.1,96.4],[83.9,87.2,90.6,94.0,97.3],
+    [84.6,88.0,91.4,94.8,98.2],[85.3,88.7,92.2,95.6,99.1],[86.0,89.5,93.0,96.5,100.0],
+    [86.7,90.2,93.8,97.3,100.8],[87.4,91.0,94.6,98.1,101.7],[88.1,91.7,95.4,99.0,102.6],
+    [88.7,92.4,96.1,99.8,103.5],[89.4,93.1,96.9,100.6,104.3],[90.1,93.9,97.7,101.4,105.2],
+    [90.7,94.6,98.5,102.3,106.0],[91.4,95.3,99.2,103.1,106.9],[92.1,96.0,100.0,103.9,107.7],
+    [92.7,96.7,100.7,104.7,108.5],[93.4,97.4,101.5,105.5,109.4],[94.0,98.1,102.2,106.3,110.2],
+    [94.6,98.8,103.0,107.1,111.0],[95.3,99.5,103.7,107.9,111.9],[95.9,100.2,104.5,108.7,112.7],
+    [96.5,100.9,105.2,109.5,113.6],[97.1,101.6,106.0,110.3,114.4],[97.7,102.3,106.7,111.1,115.2],
+    [98.4,103.0,107.4,111.9,116.1],[99.0,103.7,108.2,112.7,116.9],[99.6,104.4,108.9,113.5,117.7],
+    [100.2,105.1,109.7,114.3,118.6],[100.8,105.8,110.4,115.1,119.4],[101.4,106.5,111.2,115.9,120.3],
+    [102.0,107.2,111.9,116.7,121.1],[102.7,107.9,112.7,117.6,122.0],[103.3,108.7,113.4,118.4,122.9],
+    [103.9,109.4,114.2,119.2,123.8]
+  ]
+};
+
+/* Head circumference-for-age (cm) */
+const WHO_HC = {
+  boy: [
+    [31.5,32.6,34.0,35.5,36.6],[34.9,36.0,37.4,38.8,39.8],[36.8,37.9,39.3,40.7,41.7],
+    [38.1,39.2,40.7,42.1,43.1],[39.2,40.3,41.8,43.3,44.3],[40.1,41.3,42.8,44.3,45.4],
+    [40.9,42.1,43.6,45.2,46.2],[41.6,42.8,44.4,45.9,47.0],[42.2,43.5,45.0,46.6,47.7],
+    [42.8,44.0,45.6,47.2,48.2],[43.3,44.6,46.2,47.8,48.9],[43.7,45.0,46.7,48.3,49.4],
+    [44.2,45.4,47.1,48.8,49.9],[44.5,45.9,47.6,49.3,50.4],[44.9,46.2,48.0,49.7,50.8],
+    [45.3,46.6,48.4,50.1,51.2],[45.5,46.9,48.7,50.5,51.5],[45.8,47.2,49.0,50.7,51.8],
+    [46.1,47.5,49.3,51.0,52.1],[46.3,47.7,49.5,51.3,52.4],[46.5,47.9,49.8,51.5,52.7],
+    [46.7,48.2,50.0,51.8,52.9],[46.9,48.3,50.2,52.0,53.1],[47.1,48.5,50.4,52.2,53.3],
+    [47.2,48.7,50.6,52.4,53.5],[47.4,48.9,50.8,52.6,53.7],[47.6,49.0,51.0,52.8,53.9],
+    [47.7,49.2,51.1,52.9,54.1],[47.9,49.3,51.3,53.1,54.2],[48.0,49.5,51.5,53.3,54.4],
+    [48.1,49.7,51.6,53.5,54.6],[48.3,49.8,51.8,53.6,54.8],[48.4,49.9,51.9,53.8,55.0],
+    [48.5,50.1,52.1,54.0,55.1],[48.6,50.2,52.2,54.1,55.2],[48.7,50.3,52.3,54.2,55.4],
+    [48.8,50.4,52.5,54.3,55.5],[48.9,50.5,52.6,54.5,55.6],[49.0,50.6,52.7,54.6,55.8],
+    [49.1,50.7,52.8,54.7,55.9],[49.2,50.7,52.9,54.8,56.0],[49.3,50.8,53.0,54.9,56.1],
+    [49.3,50.9,53.1,55.0,56.2],[49.4,51.0,53.1,55.1,56.3],[49.5,51.1,53.2,55.2,56.4],
+    [49.6,51.1,53.3,55.3,56.5],[49.7,51.2,53.4,55.4,56.6],[49.7,51.3,53.5,55.5,56.7],
+    [49.8,51.4,53.5,55.5,56.8],[49.9,51.5,53.6,55.6,56.9],[50.0,51.5,53.7,55.7,57.0],
+    [50.0,51.6,53.8,55.8,57.1],[50.1,51.7,53.8,55.8,57.1],[50.2,51.8,53.9,55.9,57.2],
+    [50.2,51.8,54.0,56.0,57.3],[50.3,51.9,54.0,56.1,57.4],[50.3,52.0,54.1,56.2,57.5],
+    [50.4,52.0,54.2,56.2,57.6],[50.5,52.1,54.2,56.3,57.7],[50.5,52.2,54.3,56.4,57.7],
+    [50.6,52.2,54.4,56.5,57.8]
+  ],
+  girl: [
+    [31.1,32.2,33.5,34.9,36.0],[34.3,35.3,36.7,38.1,39.2],[36.0,37.1,38.5,39.9,41.0],
+    [37.2,38.3,39.8,41.2,42.3],[38.2,39.3,40.8,42.3,43.4],[39.0,40.2,41.7,43.2,44.3],
+    [39.7,41.0,42.5,44.0,45.1],[40.4,41.7,43.2,44.7,45.9],[41.0,42.3,43.8,45.4,46.5],
+    [41.5,42.9,44.4,46.0,47.2],[42.0,43.4,44.9,46.5,47.7],[42.5,43.8,45.4,47.0,48.2],
+    [42.9,44.3,45.9,47.5,48.7],[43.3,44.7,46.3,48.0,49.2],[43.6,45.1,46.7,48.4,49.6],
+    [44.0,45.4,47.1,48.7,50.0],[44.3,45.7,47.4,49.1,50.4],[44.6,46.1,47.7,49.4,50.7],
+    [44.8,46.3,48.0,49.7,51.0],[45.1,46.6,48.3,50.0,51.3],[45.3,46.8,48.5,50.3,51.6],
+    [45.5,47.1,48.8,50.5,51.9],[45.7,47.3,49.0,50.8,52.2],[45.9,47.5,49.3,51.1,52.4],
+    [46.1,47.7,49.5,51.3,52.7],[46.3,47.9,49.7,51.5,52.9],[46.5,48.1,50.0,51.8,53.2],
+    [46.7,48.3,50.2,52.0,53.4],[46.9,48.5,50.4,52.2,53.6],[47.0,48.7,50.5,52.4,53.8],
+    [47.2,48.8,50.7,52.6,54.0],[47.3,49.0,50.9,52.8,54.2],[47.4,49.1,51.0,53.0,54.4],
+    [47.6,49.3,51.2,53.1,54.6],[47.7,49.4,51.4,53.3,54.7],[47.8,49.5,51.5,53.5,54.9],
+    [47.9,49.7,51.6,53.6,55.1],[48.0,49.8,51.8,53.8,55.2],[48.1,49.9,51.9,53.9,55.4],
+    [48.2,50.0,52.0,54.0,55.5],[48.3,50.1,52.1,54.2,55.7],[48.4,50.2,52.3,54.3,55.8],
+    [48.5,50.3,52.4,54.4,56.0],[48.6,50.4,52.5,54.6,56.1],[48.7,50.5,52.6,54.7,56.2],
+    [48.7,50.6,52.7,54.8,56.3],[48.8,50.7,52.8,54.9,56.4],[48.9,50.8,52.9,55.0,56.5],
+    [49.0,50.8,53.0,55.1,56.7],[49.1,50.9,53.1,55.2,56.8],[49.1,51.0,53.2,55.3,56.9],
+    [49.2,51.1,53.3,55.4,57.0],[49.3,51.2,53.4,55.5,57.1],[49.4,51.3,53.5,55.6,57.2],
+    [49.4,51.4,53.6,55.8,57.3],[49.5,51.5,53.7,55.9,57.4],[49.6,51.5,53.8,56.0,57.5],
+    [49.6,51.6,53.9,56.1,57.6],[49.7,51.7,54.0,56.2,57.7],[49.8,51.8,54.1,56.3,57.9],
+    [49.9,51.9,54.2,56.5,58.0]
+  ]
+};
+
+// WHO: get row by (integer) month, interpolating for fractional months
+function whoRow(table, sex, months) {
+  const rows = table[sex];
+  const lo   = Math.min(60, Math.max(0, Math.floor(months)));
+  const hi   = Math.min(60, lo + 1);
+  if (lo === hi) return rows[lo];
+  const f = months - lo;
+  return rows[lo].map((v, i) => v + f * (rows[hi][i] - v));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const STORE_KEY = 'nicuGrowth.v3';
+const OLD_KEY = 'nicuGrowth.v2';
+const LOGO_SRC = document.querySelector('.logo').src;
+const ZS = [-1.8808, -1.0364, 0, 1.0364, 1.8808];          // z at P3, P15, P50, P85, P97
+const TABS = {
+  wt:  { name: 'Weight',             short: 'Weight', unit: 'kg', key: 'w', who: WHO_WT },
+  len: { name: 'Length / Height',    short: 'Length', unit: 'cm', key: 'l', who: WHO_LEN },
+  hc:  { name: 'Head circumference', short: 'HC',     unit: 'cm', key: 'h', who: WHO_HC },
+};
+const MAX_CGA = 280 + 60 * 30.4375;
+
+let DB = { current: null, patients: {} };   // all patients on this device
+let S = null;                                // current patient: {id,name,sex,dob,gaWk,gaDy,visits:[{id,date,wt,len,hc}],created,updated}
+let TAB = 'wt';
+let GEOM = null;
+let PDF = null;   // {blob,file,url,name}
+
+function blankPatient(sex) {
+  return { id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: '', sex: sex || 'boy', dob: '', gaWk: '', gaDy: '', visits: [], created: Date.now(), updated: Date.now() };
+}
+const isBlank = p => !p.name && !p.dob && !p.gaWk && !(p.visits && p.visits.length);
+const sortedPatients = () => Object.values(DB.patients).sort((a, b) => (b.updated || 0) - (a.updated || 0));
+const pLabel = p => p.name || 'Unnamed patient';
+
+function load() {
+  try { const j = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (j && j.patients && typeof j.patients === 'object') DB = j; } catch (e) {}
+  if (!Object.keys(DB.patients).length) {           // migrate single-patient data from the previous version
+    try {
+      const o = JSON.parse(localStorage.getItem(OLD_KEY) || 'null');
+      if (o && (o.dob || (o.visits || []).length)) { const p = Object.assign(blankPatient(o.sex), o); DB.patients[p.id] = p; DB.current = p.id; try { localStorage.setItem(STORE_KEY, JSON.stringify(DB)); } catch (e2) {} }
+    } catch (e) {}
+  }
+  Object.values(DB.patients).forEach(p => { if (!Array.isArray(p.visits)) p.visits = []; });
+  S = DB.patients[DB.current] || sortedPatients()[0];
+  if (!S) { S = blankPatient(); DB.patients[S.id] = S; }
+  DB.current = S.id;
+}
+function persist() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
+  catch (e) { toast('Storage full — back up and delete old patients'); }
+}
+function save() {
+  S.updated = Date.now(); DB.patients[S.id] = S; DB.current = S.id; persist();
+  if (!save._asked && navigator.storage && navigator.storage.persist) { save._asked = true; navigator.storage.persist().catch(() => {}); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════════════════ */
+const pad2 = n => String(n).padStart(2, '0');
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function todayISO() { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function dayNum(iso) { const [y, m, d] = iso.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 86400000); }
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const [y, m, d] = iso.split('-').map(Number);
+  return pad2(d) + ' ' + MONTHS[m - 1] + ' ' + y;
+}
+function num(v) { const s = String(v ?? '').trim().replace(',', '.'); if (!s) return NaN; const n = Number(s); return isFinite(n) ? n : NaN; }
+function weightKg(v) { const n = num(v); if (isNaN(n) || n <= 0) return NaN; return n > 30 ? n / 1000 : n; }
+function posNum(v) { const n = num(v); return n > 0 ? n : NaN; }
+const has = v => v != null && !isNaN(v);
+function ageStr(days) {
+  if (days < 0) return '—';
+  const y = Math.floor(days / 365.25), r = days - Math.floor(y * 365.25);
+  const m = Math.floor(r / 30.4375), d = Math.floor(r - m * 30.4375);
+  if (y > 0) return `${y}y ${m}m`;
+  if (m > 0) return `${m}m ${d}d`;
+  return `${d}d`;
+}
+const cgaStr = c => `${Math.floor(c / 7)}w ${c % 7}d`;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sexCol = () => S.sex === 'boy' ? '#2F7FD0' : '#D4537E';
+const isDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   AGE + REFERENCE ENGINE
+   ═══════════════════════════════════════════════════════════════════════ */
+function patientOK() { const wk = parseInt(S.gaWk, 10); const d = parseInt(S.gaDy || '0', 10); return !!S.dob && wk >= 22 && wk <= 44 && d >= 0 && d <= 6; }
+function gaBirthDays() { return parseInt(S.gaWk, 10) * 7 + (parseInt(S.gaDy, 10) || 0); }
+
+function ageAt(iso) {
+  if (!patientOK() || !iso) return null;
+  const dol = dayNum(iso) - dayNum(S.dob);
+  if (dol < 0 || isNaN(dol)) return null;
+  const cga = gaBirthDays() + dol, corr = cga - 280, corrMo = corr / 30.4375;
+  const ref = cga < 154 ? 'below' : cga <= 350 ? 'fenton' : corrMo <= 60 ? 'who' : 'above';
+  return { dol, cga, corr, corrMo, ref };
+}
+
+// Reference row for a CGA (days) — interpolated between weeks (Fenton) / months (WHO)
+function refAt(cga, tab) {
+  if (cga < 154 || cga > MAX_CGA) return null;
+  const k = TABS[tab].key;
+  if (cga <= 350) {
+    const wf = cga / 7, lo = Math.floor(wf), hi = Math.min(50, lo + 1), f = wf - lo;
+    const a = FENTON[S.sex][lo][k], b = FENTON[S.sex][hi][k];
+    return a.map((v, i) => v + f * (b[i] - v));
+  }
+  return whoRow(TABS[tab].who, S.sex, (cga - 280) / 30.4375);
+}
+
+function zOf(val, arr) {
+  let i;
+  if (val <= arr[0]) i = 0; else if (val >= arr[4]) i = 3; else { i = 0; while (i < 3 && val > arr[i + 1]) i++; }
+  const span = arr[i + 1] - arr[i];
+  return span > 0 ? ZS[i] + (val - arr[i]) / span * (ZS[i + 1] - ZS[i]) : 0;
+}
+function cdf(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z)), d = 0.3989423 * Math.exp(-z * z / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - p : p;
+}
+function assess(val, tab, cga) {
+  if (!has(val)) return null;
+  const ref = refAt(cga, tab);
+  if (!ref) return { val, ref: null };
+  const z = zOf(val, ref);
+  return { val, ref, z, p: cdf(z) * 100 };
+}
+function pStr(p) { if (p < 0.1) return '<P0.1'; if (p > 99.9) return '>P99.9'; if (p < 1 || p > 99) return 'P' + p.toFixed(1); return 'P' + Math.round(p); }
+function zStr(z) { return (z < 0 ? '−' : '+') + Math.abs(z).toFixed(2); }
+function band(p) {
+  if (p < 3)   return { k: 'vlow',  txt: 'Below P3' };
+  if (p < 10)  return { k: 'low',   txt: 'P3–P10' };
+  if (p <= 90) return { k: 'ok',    txt: 'P10–P90' };
+  if (p <= 97) return { k: 'high',  txt: 'P90–P97' };
+  return { k: 'vhigh', txt: 'Above P97' };
+}
+function fmtVal(v, tab) { return tab === 'wt' ? (v < 10 ? v.toFixed(3) : v.toFixed(2)) + ' kg' : v.toFixed(1) + ' cm'; }
+function refName(a) {
+  if (!a) return '';
+  if (a.ref === 'fenton') return `Fenton 2025 · CGA ${cgaStr(a.cga)}`;
+  if (a.ref === 'who') return `WHO 2006 · corrected ${a.corrMo.toFixed(1)} mo`;
+  return a.ref === 'below' ? 'Below 22 weeks — no reference' : 'Beyond 5 years — no reference';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ENTRIES (saved visits + current unsaved measurement)
+   ═══════════════════════════════════════════════════════════════════════ */
+function currentEntry() {
+  const e = { date: $('m-date').value, wt: weightKg($('m-wt').value), len: posNum($('m-len').value), hc: posNum($('m-hc').value) };
+  e.any = has(e.wt) || has(e.len) || has(e.hc);
+  return e;
+}
+const same = (a, b) => has(a) ? (has(b) && Math.abs(a - b) < 1e-9) : !has(b);
+function isSaved(c) { return S.visits.some(v => v.date === c.date && same(v.wt, c.wt) && same(v.len, c.len) && same(v.hc, c.hc)); }
+function entries(includeCurrent = true) {
+  const list = S.visits.map(v => ({ ...v, cur: false }));
+  if (includeCurrent) {
+    const c = currentEntry();
+    if (c.any && c.date && !isSaved(c)) list.push({ id: 'cur', date: c.date, wt: c.wt, len: c.len, hc: c.hc, cur: true });
+  }
+  return list.map(e => ({ ...e, age: ageAt(e.date) })).filter(e => e.age).sort((a, b) => a.age.cga - b.age.cga || (a.cur - b.cur));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   RENDER: AGE, CENTILES, RECORD
+   ═══════════════════════════════════════════════════════════════════════ */
+function renderAll() { renderPatientUI(); renderAge(); renderPct(); renderRecord(); renderChart(); }
+
+function renderPatientUI() {
+  document.querySelectorAll('#sex-seg button').forEach(b => {
+    const on = b.dataset.sex === S.sex; b.classList.toggle('on', on); b.setAttribute('aria-checked', on);
+  });
+  $('legend-dot').style.background = sexCol();
+  $('pt-count').textContent = sortedPatients().filter(p => !isBlank(p) || p.id === S.id).length;
+  const ok = patientOK();
+  $('patient-hint').classList.toggle('hidden', ok);
+  $('assess-card').classList.toggle('hidden', !ok);
+  $('actionbar').classList.toggle('hidden', !ok);
+  document.body.classList.toggle('has-bar', ok);
+}
+
+function renderAge() {
+  if (!patientOK()) return;
+  const iso = $('m-date').value;
+  const a = ageAt(iso);
+  const banner = $('banner'), tl = $('timeline');
+  $('assess-sub').textContent = iso ? fmtDate(iso) : '';
+  if (!a) {
+    $('chips').innerHTML = `<div class="warn" style="grid-column:1/-1">${iso ? 'Measurement date is before the date of birth.' : 'Choose a measurement date.'}</div>`;
+    banner.classList.add('hidden'); tl.classList.add('hidden'); return;
+  }
+  banner.classList.remove('hidden'); tl.classList.remove('hidden');
+  $('chips').innerHTML = [
+    [cgaStr(a.cga), 'CGA'],
+    [a.corr < 0 ? 'Not yet term' : ageStr(a.corr), 'Corrected age'],
+    [ageStr(a.dol), 'Chronological age'],
+    ['Day ' + a.dol, 'Day of life'],
+  ].map(([v, l]) => `<div class="chip"><b>${v}</b><span>${l}</span></div>`).join('');
+
+  const cls = a.ref === 'fenton' ? 'fenton' : a.ref === 'who' ? 'who' : 'out';
+  banner.className = 'banner ' + cls;
+  $('banner-title').textContent = a.ref === 'fenton' ? 'Fenton 2025 preterm chart' : a.ref === 'who' ? 'WHO Child Growth Standards' : 'Outside reference range';
+  $('banner-sub').textContent = a.ref === 'fenton' ? `CGA ${cgaStr(a.cga)} · used until 50 weeks CGA`
+    : a.ref === 'who' ? `Plotted by corrected age ${ageStr(a.corr)} (${a.corrMo.toFixed(1)} months)` : refName(a);
+
+  const MIN = 154, MAX = 350, TERM = 280;
+  const termPct = (TERM - MIN) / (MAX - MIN) * 100;
+  const cur = Math.min(100, Math.max(0, (a.cga - MIN) / (MAX - MIN) * 100));
+  $('tl-pre').style.cssText = `left:0;width:${Math.min(cur, termPct)}%`;
+  $('tl-term').style.cssText = cur > termPct ? `left:${termPct}%;width:${cur - termPct}%` : 'width:0';
+  $('tl-dot').style.left = cur + '%';
+  $('tl-dot').style.background = a.cga > 350 ? '#639922' : '#378ADD';
+}
+
+const zPos = z => Math.min(100, Math.max(0, (z + 3) / 6 * 100));
+
+function renderPct() {
+  const out = $('pct-out');
+  const a = ageAt($('m-date').value), c = currentEntry();
+  $('wt-unit').textContent = num($('m-wt').value) > 30 ? 'g' : 'kg';
+  if (!a || !c.any) { out.innerHTML = ''; return; }
+  const cls = a.ref === 'fenton' ? 'fenton' : a.ref === 'who' ? 'who' : 'out';
+  let html = `<div class="res"><div class="res-ref ${cls}">${refName(a)} · ${S.sex === 'boy' ? 'Male' : 'Female'}</div>`;
+  ['wt', 'len', 'hc'].forEach(tab => {
+    const r = assess(c[tab], tab, a.cga);
+    if (!r) return;
+    if (!r.ref) { html += `<div class="res-row"><div class="res-top"><span class="res-name">${TABS[tab].name}</span><span class="res-val">${fmtVal(r.val, tab)}</span></div><div class="res-foot">No reference available at this age.</div></div>`; return; }
+    const b = band(r.p);
+    const gNote = tab === 'wt' && num($('m-wt').value) > 30 ? ` · read as ${Math.round(num($('m-wt').value))} g` : '';
+    html += `<div class="res-row">
+      <div class="res-top">
+        <span class="res-name">${TABS[tab].name}</span>
+        <span class="res-val">${fmtVal(r.val, tab)}</span>
+        <span class="res-p">${pStr(r.p)}</span>
+        <span class="res-z">z ${zStr(r.z)}</span>
+        <span class="tag t-${b.k}">${b.txt}</span>
+      </div>
+      <div class="cbar"><i style="left:${zPos(r.z)}%;background:${sexCol()}"></i></div>
+      <div class="cbar-l"><span style="left:${zPos(-1.8808)}%">P3</span><span style="left:${zPos(-1.2816)}%">P10</span><span style="left:50%">P50</span><span style="left:${zPos(1.2816)}%">P90</span><span style="left:${zPos(1.8808)}%">P97</span></div>
+      <div class="res-foot">P50 at this age = ${fmtVal(r.ref[2], tab)}${gNote}</div>
+      ${Math.abs(r.z) > 4 ? '<div class="res-warn">⚠ Far outside the reference — please check the entry.</div>' : ''}
+    </div>`;
+  });
+  out.innerHTML = html + '</div>';
+}
+
+function renderRecord() {
+  const card = $('rec-card');
+  if (!patientOK()) { card.classList.add('hidden'); return; }
+  card.classList.remove('hidden');
+  const list = entries(false);
+  $('rec-count').textContent = list.length;
+  if (!list.length) { $('rec-list').innerHTML = '<div class="empty">No saved measurements yet.<br>Enter values above and tap “Save”.</div>'; return; }
+  $('rec-list').innerHTML = list.slice().reverse().map(e => {
+    const cells = ['wt', 'len', 'hc'].map(tab => {
+      const r = assess(e[tab], tab, e.age.cga);
+      if (!r) return `<div><small>${TABS[tab].short}</small><b>—</b></div>`;
+      const v = tab === 'wt' ? (r.val < 10 ? r.val.toFixed(3) : r.val.toFixed(2)) : r.val.toFixed(1);
+      const p = r.ref ? `<em class="em-${band(r.p).k}">${pStr(r.p)}</em>` : '';
+      return `<div><small>${TABS[tab].short} (${TABS[tab].unit})</small><b>${v}</b>${p}</div>`;
+    }).join('');
+    const age = e.age.ref === 'fenton' ? `CGA ${cgaStr(e.age.cga)}` : `Corr. ${ageStr(e.age.corr)}`;
+    return `<div class="rec"><div class="rec-h"><b>${fmtDate(e.date)}</b><span>${age} · DOL ${e.age.dol}</span>
+      <button class="rec-del" type="button" data-del="${esc(e.id)}" aria-label="Delete measurement">×</button></div>
+      <div class="rec-m">${cells}</div></div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CHART DRAWING (shared by screen, image and PDF)
+   ═══════════════════════════════════════════════════════════════════════ */
+function xRange(list) {
+  let ds = list.map(e => e.age.cga);
+  if (!ds.length) { const a = ageAt($('m-date').value); if (!a) return null; ds = [a.cga]; }
+  let a = Math.min(...ds) - 10, b = Math.max(...ds) + 14;
+  if (b - a < 56) { const m = (a + b) / 2; a = m - 28; b = m + 28; }
+  a = Math.max(154, Math.floor(a / 7) * 7);
+  b = Math.min(MAX_CGA, Math.ceil(b / 7) * 7);
+  if (b - a < 28) a = Math.max(154, b - 28);
+  return [a, b];
+}
+
+function niceAxis(min, max, n) {
+  const range = max - min; if (!(range > 0)) return [min];
+  const raw = range / Math.max(2, n), mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(f => f * mag).find(f => f >= raw) || mag * 10;
+  const out = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + step * 1e-6; v += step) out.push(+v.toFixed(6));
+  return out;
+}
+
+function xTicks(x0, x1, maxTicks) {
+  const span = x1 - x0, out = [];
+  const fenSpan = Math.max(0, Math.min(350, x1) - x0), whoSpan = Math.max(0, x1 - Math.max(350, x0));
+  if (fenSpan > 0) {
+    const allow = Math.max(2, maxTicks * fenSpan / span);
+    const ws = [1, 2, 4, 8].find(s => fenSpan / 7 / s <= allow) || 8;
+    for (let w = Math.ceil(x0 / 7 / ws) * ws; w * 7 <= Math.min(350, x1); w += ws) out.push({ d: w * 7, t: w + 'w' });
+  }
+  if (whoSpan > 0) {
+    const allow = Math.max(2, maxTicks * whoSpan / span), moSpan = whoSpan / 30.4375;
+    const ms = [1, 2, 3, 6, 12].find(s => moSpan / s <= allow) || 12;
+    const startMo = (Math.max(350, x0) - 280) / 30.4375;
+    for (let m = Math.ceil(startMo / ms) * ms; 280 + m * 30.4375 <= x1; m += ms) {
+      const d = 280 + m * 30.4375;
+      if (out.length && d - out[out.length - 1].d < span / maxTicks * 0.7) continue;
+      out.push({ d, t: m + 'm' });
+    }
+  }
+  return out;
+}
+
+function drawChart(ctx, X, Y, W, H, tab, o) {
+  const fs = o.fs, dark = !!o.dark, list = o.list;
+  const C = dark
+    ? { bg: '#222220', grid: 'rgba(255,255,255,0.07)', axis: 'rgba(255,255,255,0.35)', text: '#A9A79F', title: '#ECEAE4', line: a => `rgba(255,255,255,${a})` }
+    : { bg: '#FFFFFF', grid: 'rgba(0,0,0,0.07)', axis: 'rgba(0,0,0,0.45)', text: '#5A5F66', title: '#15181C', line: a => `rgba(0,0,0,${a})` };
+  const col = sexCol();
+  const font = (w, s) => `${w} ${s}px -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif`;
+
+  ctx.save();
+  ctx.fillStyle = C.bg; ctx.fillRect(X, Y, W, H);
+  const titleH = o.title ? fs * 2.1 : 0;
+  if (o.title) {
+    ctx.font = font(700, fs * 1.25); ctx.fillStyle = C.title; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(o.title, X + fs * 0.4, Y + fs * 1.35);
+    if (o.subtitle) { ctx.font = font(400, fs * 0.95); ctx.fillStyle = C.text; ctx.textAlign = 'right'; ctx.fillText(o.subtitle, X + W - fs * 0.4, Y + fs * 1.35); }
+  }
+  const P = { l: fs * 3.9, r: fs * 3.2, t: titleH + fs * 1.5, b: fs * 3.4 };
+  const cx = X + P.l, cy = Y + P.t, cw = W - P.l - P.r, ch = H - P.t - P.b;
+  const [x0, x1] = o.xr;
+
+  // reference samples (insert exact Fenton→WHO boundary so the switch is vertical at 50 w)
+  const step = Math.max(1, (x1 - x0) / 180);
+  const ds = []; for (let d = x0; d < x1; d += step) ds.push(d); ds.push(x1);
+  if (x0 < 350 && x1 > 350) ds.push(350, 350.0001);
+  ds.sort((a, b) => a - b);
+  const samples = ds.map(d => ({ d, r: refAt(d, tab) }));
+
+  const pts = list.filter(e => has(e[tab])).map(e => ({ d: e.age.cga, v: e[tab], e }));
+  const vals = [];
+  samples.forEach(s => { if (s.r) vals.push(s.r[0], s.r[4]); });
+  pts.forEach(p => vals.push(p.v));
+  if (!vals.length) { ctx.restore(); return { pts: [] }; }
+  let y0 = Math.min(...vals), y1 = Math.max(...vals);
+  const yp = (y1 - y0) * 0.07 || 1; y0 -= yp; y1 += yp;
+  if (tab === 'wt') y0 = Math.max(0, y0);
+
+  const XP = d => cx + (d - x0) / (x1 - x0) * cw;
+  const YP = v => cy + (1 - (v - y0) / (y1 - y0)) * ch;
+
+  // grid
+  ctx.lineWidth = Math.max(0.5, fs / 14); ctx.strokeStyle = C.grid;
+  const yt = niceAxis(y0, y1, Math.max(4, Math.round(ch / (fs * 3.6))));
+  yt.forEach(v => { if (v < y0 || v > y1) return; ctx.beginPath(); ctx.moveTo(cx, YP(v)); ctx.lineTo(cx + cw, YP(v)); ctx.stroke(); });
+  const xt = xTicks(x0, x1, Math.max(3, Math.floor(cw / (fs * 4.2))));
+  xt.forEach(t => { ctx.beginPath(); ctx.moveTo(XP(t.d), cy); ctx.lineTo(XP(t.d), cy + ch); ctx.stroke(); });
+
+  // Fenton | WHO divider
+  if (x0 < 350 && x1 > 350) {
+    const xd = XP(350);
+    ctx.save(); ctx.setLineDash([fs * 0.45, fs * 0.35]); ctx.strokeStyle = C.line(0.3); ctx.lineWidth = fs / 8;
+    ctx.beginPath(); ctx.moveTo(xd, cy); ctx.lineTo(xd, cy + ch); ctx.stroke(); ctx.restore();
+    ctx.font = font(600, fs * 0.8); ctx.fillStyle = C.text; ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'right'; ctx.fillText('Fenton', xd - fs * 0.35, cy - fs * 0.4);
+    ctx.textAlign = 'left'; ctx.fillText('WHO', xd + fs * 0.35, cy - fs * 0.4);
+  }
+
+  ctx.save(); ctx.beginPath(); ctx.rect(cx, cy, cw, ch); ctx.clip();
+  // runs of contiguous reference
+  const runs = []; let run = [];
+  samples.forEach(s => { if (s.r) run.push(s); else if (run.length) { runs.push(run); run = []; } });
+  if (run.length) runs.push(run);
+  const bandFill = (lo, hi, alpha) => runs.forEach(rn => {
+    ctx.beginPath();
+    rn.forEach((s, i) => i ? ctx.lineTo(XP(s.d), YP(s.r[lo])) : ctx.moveTo(XP(s.d), YP(s.r[lo])));
+    for (let i = rn.length - 1; i >= 0; i--) ctx.lineTo(XP(rn[i].d), YP(rn[i].r[hi]));
+    ctx.closePath(); ctx.globalAlpha = alpha; ctx.fillStyle = col; ctx.fill(); ctx.globalAlpha = 1;
+  });
+  bandFill(0, 4, dark ? 0.10 : 0.07);
+  bandFill(1, 3, dark ? 0.12 : 0.09);
+  const line = (idx, a, w, dash) => runs.forEach(rn => {
+    ctx.save(); ctx.strokeStyle = C.line(a); ctx.lineWidth = w; ctx.setLineDash(dash); ctx.beginPath();
+    rn.forEach((s, i) => i ? ctx.lineTo(XP(s.d), YP(s.r[idx])) : ctx.moveTo(XP(s.d), YP(s.r[idx])));
+    ctx.stroke(); ctx.restore();
+  });
+  const lw = fs / 11;
+  line(0, 0.32, lw, [fs * 0.4, fs * 0.3]); line(4, 0.32, lw, [fs * 0.4, fs * 0.3]);
+  line(1, 0.32, lw, [fs * 0.15, fs * 0.25]); line(3, 0.32, lw, [fs * 0.15, fs * 0.25]);
+  line(2, 0.62, lw * 1.8, []);
+  ctx.restore();
+
+  // axes
+  ctx.strokeStyle = C.axis; ctx.lineWidth = fs / 9; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy + ch); ctx.lineTo(cx + cw, cy + ch); ctx.stroke();
+
+  ctx.font = font(400, fs * 0.9); ctx.fillStyle = C.text; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  const ydp = yt.length > 1 && (yt[1] - yt[0]) < 1 ? (yt[1] - yt[0] < 0.5 ? 2 : 1) : 0;
+  yt.forEach(v => { if (v >= y0 && v <= y1) ctx.fillText(v.toFixed(ydp), cx - fs * 0.45, YP(v)); });
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  xt.forEach(t => ctx.fillText(t.t, XP(t.d), cy + ch + fs * 0.45));
+
+  ctx.save(); ctx.translate(X + fs * 0.85, cy + ch / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = font(600, fs * 0.9);
+  ctx.fillText(`${TABS[tab].name} (${TABS[tab].unit})`, 0, 0); ctx.restore();
+  const xTitle = x1 <= 350 ? 'Corrected gestational age (weeks)' : x0 >= 350 ? 'Corrected age (months)' : 'CGA (weeks)  →  corrected age (months)';
+  ctx.font = font(600, fs * 0.9); ctx.textBaseline = 'alphabetic';
+  ctx.fillText(xTitle, cx + cw / 2, Y + H - fs * 0.5);
+
+  // centile labels at right edge, nudged apart
+  const last = [...samples].reverse().find(s => s.r);
+  if (last) {
+    const labs = [['P97', 4], ['P85', 3], ['P50', 2], ['P15', 1], ['P3', 0]].map(([t, i]) => ({ t, y: YP(last.r[i]) }));
+    const gap = fs * 0.95;
+    for (let i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < gap) labs[i].y = labs[i - 1].y + gap;
+    ctx.font = font(600, fs * 0.8); ctx.fillStyle = C.text; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    labs.forEach(l => { if (l.y >= cy - fs && l.y <= cy + ch + fs) ctx.fillText(l.t, cx + cw + fs * 0.35, l.y); });
+  }
+
+  // patient line + points
+  const geo = [];
+  if (pts.length > 1) {
+    ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = fs / 4.5; ctx.lineJoin = 'round';
+    ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(XP(p.d), YP(p.v)) : ctx.moveTo(XP(p.d), YP(p.v))); ctx.stroke(); ctx.restore();
+  }
+  const R = fs * 0.42;
+  pts.forEach(p => {
+    const px = XP(p.d), py = YP(p.v);
+    ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2);
+    ctx.fillStyle = p.e.cur ? C.bg : col; ctx.fill();
+    ctx.lineWidth = p.e.cur ? fs / 5 : fs / 6; ctx.strokeStyle = p.e.cur ? col : C.bg; ctx.stroke();
+    geo.push({ x: px, y: py, p });
+  });
+  if (pts.length && pts.length <= (o.labelMax || 10)) {
+    ctx.font = font(700, fs * 0.82); ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    let lastX = -1e9;
+    pts.forEach((p, i) => {
+      const px = XP(p.d), isLast = i === pts.length - 1;
+      if (!isLast && XP(pts[i + 1].d) - px < fs * 3.2) return;   // keep the later label when two points crowd
+      if (px - lastX < fs * 3.2 && !isLast) return;
+      ctx.fillText(tab === 'wt' ? p.v.toFixed(p.v < 10 ? 3 : 2) : p.v.toFixed(1), px, YP(p.v) - R - fs * 0.35); lastX = px;
+    });
+  }
+  if (!pts.length) {
+    ctx.font = font(500, fs); ctx.fillStyle = C.text; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('No ' + TABS[tab].name.toLowerCase() + ' recorded', cx + cw / 2, cy + ch / 2);
+  }
+  ctx.restore();
+  return { pts: geo };
+}
+
+function renderChart() {
+  const card = $('chart-card');
+  const list = patientOK() ? entries(true) : [];
+  const xr = list.length ? xRange(list) : null;
+  if (!xr) { card.classList.add('hidden'); GEOM = null; return; }
+  card.classList.remove('hidden');
+  const cv = $('chart'), w = cv.parentElement.clientWidth || 340;
+  const h = Math.round(Math.max(270, Math.min(460, w * 0.72)));
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.height = h + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  GEOM = drawChart(ctx, 0, 0, w, h, TAB, { dark: isDark(), fs: w < 420 ? 10.5 : 11.5, xr, list });
+  $('tip').classList.add('hidden');
+}
+
+function showTip(ev) {
+  if (!GEOM || !GEOM.pts.length) return;
+  const rect = $('chart').getBoundingClientRect();
+  const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+  let best = null, bd = 30 * 30;
+  GEOM.pts.forEach(g => { const d = (g.x - x) ** 2 + (g.y - y) ** 2; if (d < bd) { bd = d; best = g; } });
+  const tip = $('tip');
+  if (!best) { tip.classList.add('hidden'); return; }
+  const e = best.p.e, r = assess(e[TAB], TAB, e.age.cga);
+  const age = e.age.ref === 'fenton' ? `CGA ${cgaStr(e.age.cga)}` : `Corrected ${ageStr(e.age.corr)}`;
+  tip.innerHTML = `<b>${fmtDate(e.date)}</b>${e.cur ? ' (not saved)' : ''}<br>${age} · DOL ${e.age.dol}<br>${fmtVal(r.val, TAB)}${r.ref ? ` · ${pStr(r.p)} · z ${zStr(r.z)}` : ''}`;
+  tip.classList.remove('hidden');
+  const tw = tip.offsetWidth, cw = rect.width;
+  tip.style.left = Math.min(cw - tw / 2 - 4, Math.max(tw / 2 + 4, best.x)) + 'px';
+  tip.style.top = best.y + 'px';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PDF REPORT  (A4, rendered offline — no libraries)
+   ═══════════════════════════════════════════════════════════════════════ */
+const A4W = 595.28, A4H = 841.89, PX_PER_PT = 200 / 72;   // 200 dpi
+const NAVY = '#0D3B6E';
+
+let LOGO_IMG = null;
+function loadLogo() { return new Promise(res => { if (LOGO_IMG) return res(LOGO_IMG); const im = new Image(); im.onload = () => { LOGO_IMG = im; res(im); }; im.onerror = () => res(null); im.src = LOGO_SRC; }); }
+
+function T(c, s, x, y, o = {}) {
+  c.font = `${o.w || 400} ${o.s || 9}px -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif`;
+  c.fillStyle = o.c || '#1A1D21'; c.textAlign = o.a || 'left'; c.textBaseline = o.b || 'alphabetic';
+  if (o.max) { let t = String(s); while (t.length > 1 && c.measureText(t).width > o.max) t = t.slice(0, -2) + '…'; s = t; }
+  c.fillText(s, x, y);
+}
+function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+
+function buildReport() {
+  const list = entries(true);
+  if (!list.length) return null;
+  const xr = xRange(list);
+  const pages = [];
+  const M = 36;
+  const newPage = () => {
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(A4W * PX_PER_PT); cv.height = Math.round(A4H * PX_PER_PT);
+    const c = cv.getContext('2d'); c.scale(PX_PER_PT, PX_PER_PT);
+    c.fillStyle = '#fff'; c.fillRect(0, 0, A4W, A4H);
+    pages.push({ cv, c }); return c;
+  };
+  const name = $('pt-name').value.trim();
+  const last = list[list.length - 1];
+  const sexTxt = S.sex === 'boy' ? 'Male' : 'Female';
+  const chartOpts = { dark: false, fs: 7.6, xr, list, labelMax: 8 };
+  const chartSub = `${sexTxt} · ${xr[0] < 350 ? 'Fenton 2025' : ''}${xr[0] < 350 && xr[1] > 350 ? ' → ' : ''}${xr[1] > 350 ? 'WHO 2006' : ''}`;
+
+  /* ── Page 1 ── */
+  let c = newPage();
+  if (LOGO_IMG) { c.save(); rrect(c, M, 28, 44, 44, 9); c.clip(); c.drawImage(LOGO_IMG, M, 28, 44, 44); c.restore(); }
+  T(c, 'Neonatal Growth Chart Report', M + 56, 47, { s: 17, w: 700, c: NAVY });
+  T(c, 'Hospital Miri NICU · Department of Paediatrics & Neonatology, Sarawak, Malaysia', M + 56, 62, { s: 8.6, c: '#5A5F66' });
+  T(c, 'Generated', A4W - M, 45, { s: 7.5, c: '#8A939C', a: 'right' });
+  const now = new Date();
+  T(c, fmtDate(todayISO()) + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()), A4W - M, 58, { s: 9, w: 600, a: 'right' });
+  c.fillStyle = NAVY; c.fillRect(M, 80, A4W - 2 * M, 1.4);
+
+  // patient box
+  const bx = M, by = 92, bw = A4W - 2 * M, bh = 66;
+  c.fillStyle = '#F2F6FB'; rrect(c, bx, by, bw, bh, 7); c.fill();
+  const fields = [
+    ['PATIENT / RN', name || '—'], ['SEX', sexTxt], ['DATE OF BIRTH', fmtDate(S.dob)],
+    ['GA AT BIRTH', `${parseInt(S.gaWk, 10)}w ${parseInt(S.gaDy, 10) || 0}d`],
+    ['LATEST MEASUREMENT', fmtDate(last.date) + (last.cur ? ' *' : '')],
+    ['AGE AT LATEST', last.age.ref === 'fenton' ? `CGA ${cgaStr(last.age.cga)} (day ${last.age.dol})` : `Corrected ${ageStr(last.age.corr)} (day ${last.age.dol})`],
+  ];
+  const colW = (bw - 24) / 3;
+  fields.forEach(([l, v], i) => {
+    const fx = bx + 12 + (i % 3) * colW, fy = by + 17 + Math.floor(i / 3) * 28;
+    T(c, l, fx, fy, { s: 6.6, w: 700, c: '#8A939C' });
+    T(c, v, fx, fy + 12, { s: 9.6, w: 700, max: colW - 8 });
+  });
+
+  // latest measurement summary
+  let y = by + bh + 22;
+  T(c, 'Latest measurements', M, y, { s: 10.5, w: 700, c: NAVY });
+  y += 8;
+  const cols = [M, M + 118, M + 196, M + 248, M + 300, M + 378];
+  c.fillStyle = '#E9EEF5'; c.fillRect(M, y, A4W - 2 * M, 15);
+  ['Measure', 'Value', 'Centile', 'z-score', 'Band', 'Reference (date)'].forEach((h, i) => T(c, h, cols[i] + 5, y + 10.4, { s: 7.4, w: 700, c: '#3A4048' }));
+  y += 15;
+  ['wt', 'len', 'hc'].forEach((tab, ri) => {
+    const e = [...list].reverse().find(x => has(x[tab]));
+    if (ri % 2) { c.fillStyle = '#FAFBFD'; c.fillRect(M, y, A4W - 2 * M, 16); }
+    T(c, TABS[tab].name, cols[0] + 5, y + 11, { s: 8.4, w: 600 });
+    if (!e) { T(c, 'not recorded', cols[1] + 5, y + 11, { s: 8.4, c: '#8A939C' }); y += 16; return; }
+    const r = assess(e[tab], tab, e.age.cga);
+    T(c, fmtVal(r.val, tab), cols[1] + 5, y + 11, { s: 8.4, w: 700 });
+    if (r.ref) {
+      const b = band(r.p);
+      const bc = { vlow: '#A32D2D', low: '#8A5208', ok: '#3B6D11', high: '#534AB7', vhigh: '#534AB7' }[b.k];
+      T(c, pStr(r.p), cols[2] + 5, y + 11, { s: 8.4, w: 700, c: bc });
+      T(c, zStr(r.z), cols[3] + 5, y + 11, { s: 8.4 });
+      T(c, b.txt, cols[4] + 5, y + 11, { s: 8.4, w: 600, c: bc });
+    }
+    T(c, `${e.age.ref === 'fenton' ? 'Fenton, ' + cgaStr(e.age.cga) : e.age.ref === 'who' ? 'WHO, ' + e.age.corrMo.toFixed(1) + ' mo corr.' : '—'} · ${fmtDate(e.date).slice(0, 6)}`, cols[5] + 5, y + 11, { s: 7.6, c: '#5A5F66', max: A4W - M - cols[5] - 8 });
+    y += 16;
+  });
+  c.strokeStyle = '#D8DEE6'; c.lineWidth = 0.6; c.strokeRect(M, y - 63, A4W - 2 * M, 63);
+
+  // charts
+  y += 14;
+  const chH = (A4H - 46 - y - 10) / 2;
+  drawChart(c, M, y, A4W - 2 * M, chH, 'wt', { ...chartOpts, title: 'Weight', subtitle: chartSub });
+  c.strokeStyle = '#D8DEE6'; c.strokeRect(M, y, A4W - 2 * M, chH);
+  y += chH + 10;
+  drawChart(c, M, y, A4W - 2 * M, chH, 'len', { ...chartOpts, title: 'Length / Height', subtitle: chartSub });
+  c.strokeRect(M, y, A4W - 2 * M, chH);
+
+  /* ── Page 2: HC chart + growth record ── */
+  c = newPage();
+  y = 36;
+  drawChart(c, M, y, A4W - 2 * M, chH, 'hc', { ...chartOpts, title: 'Head circumference', subtitle: chartSub });
+  c.strokeStyle = '#D8DEE6'; c.lineWidth = 0.6; c.strokeRect(M, y, A4W - 2 * M, chH);
+  y += chH + 24;
+
+  const tcols = [M, M + 72, M + 104, M + 152, M + 208, M + 314, M + 420];
+  const tableHead = (title) => {
+    T(c, title, M, y, { s: 10.5, w: 700, c: NAVY }); y += 8;
+    c.fillStyle = NAVY; c.fillRect(M, y, A4W - 2 * M, 15);
+    ['Date', 'DOL', 'CGA', 'Corr. age', 'Weight', 'Length', 'Head circ.'].forEach((h, i) => T(c, h, tcols[i] + 5, y + 10.4, { s: 7.4, w: 700, c: '#fff' }));
+    y += 15;
+  };
+  tableHead(`Growth record (${list.length} measurement${list.length > 1 ? 's' : ''})`);
+  const ROW = 15, BOTTOM = A4H - 56;
+  list.forEach((e, i) => {
+    if (y + ROW > BOTTOM) { c = newPage(); y = 44; tableHead('Growth record (continued)'); }
+    if (i % 2) { c.fillStyle = '#F6F8FB'; c.fillRect(M, y, A4W - 2 * M, ROW); }
+    const ty = y + 10.4;
+    T(c, fmtDate(e.date) + (e.cur ? ' *' : ''), tcols[0] + 5, ty, { s: 7.8, w: 600 });
+    T(c, String(e.age.dol), tcols[1] + 5, ty, { s: 7.8 });
+    T(c, cgaStr(e.age.cga), tcols[2] + 5, ty, { s: 7.8 });
+    T(c, e.age.corr < 0 ? '—' : ageStr(e.age.corr), tcols[3] + 5, ty, { s: 7.8 });
+    ['wt', 'len', 'hc'].forEach((tab, k) => {
+      const r = assess(e[tab], tab, e.age.cga), x = tcols[4 + k] + 5;
+      if (!r) { T(c, '—', x, ty, { s: 7.8, c: '#8A939C' }); return; }
+      T(c, fmtVal(r.val, tab), x, ty, { s: 7.8, w: 600 });
+      if (r.ref) {
+        const bc = { vlow: '#A32D2D', low: '#8A5208', ok: '#3B6D11', high: '#534AB7', vhigh: '#534AB7' }[band(r.p).k];
+        T(c, pStr(r.p), x + 58, ty, { s: 7.6, w: 700, c: bc });
+      }
+    });
+    y += ROW;
+  });
+  c.strokeStyle = '#D8DEE6'; c.lineWidth = 0.6; c.beginPath(); c.moveTo(M, y); c.lineTo(A4W - M, y); c.stroke();
+
+  // notes
+  const notes = [
+    (list.some(e => e.cur) ? '* Measurement entered but not yet saved to the growth record.  ' : '') + 'DOL = day of life; CGA = corrected gestational age; corrected age = CGA − 40 weeks.',
+    'Fenton 2025 is used up to 50 weeks CGA, then WHO Child Growth Standards (2006) by corrected age. Centiles and z-scores are estimated by',
+    'interpolation between the P3/P15/P50/P85/P97 curves; values beyond P3 or P97 are extrapolated and approximate.',
+    'References: Fenton TR et al. Third-generation preterm growth chart, 2025 (fentongrowth.ca). WHO MGRS Group. Acta Paediatr 2006;Suppl 450.',
+  ];
+  if (y + 18 + notes.length * 10 > BOTTOM) { c = newPage(); y = 44; }
+  y += 16;
+  notes.forEach(n => { T(c, n, M, y, { s: 6.9, c: '#5A5F66' }); y += 10; });
+
+  // footers
+  pages.forEach((p, i) => {
+    const pc = p.c;
+    pc.fillStyle = '#D8DEE6'; pc.fillRect(M, A4H - 34, A4W - 2 * M, 0.6);
+    T(pc, `${name ? name + ' · ' : ''}DOB ${fmtDate(S.dob)} · GA ${parseInt(S.gaWk, 10)}w ${parseInt(S.gaDy, 10) || 0}d`, M, A4H - 22, { s: 7, c: '#5A5F66', max: 300 });
+    T(pc, 'For clinical reference only — verify against printed charts', A4W / 2 + 60, A4H - 22, { s: 7, c: '#8A939C', a: 'center' });
+    T(pc, `Page ${i + 1} of ${pages.length}`, A4W - M, A4H - 22, { s: 7, w: 600, c: '#5A5F66', a: 'right' });
+  });
+  return pages.map(p => p.cv);
+}
+
+function b64ToBytes(dataUrl) {
+  const bin = atob(dataUrl.split(',')[1]); const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// Minimal PDF writer: one full-page JPEG per page
+function makePdf(canvases, title) {
+  const enc = new TextEncoder(), parts = [], offs = [];
+  let len = 0;
+  const push = x => { const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); len += b.length; };
+  const obj = (id, body) => { offs[id] = len; push(`${id} 0 obj\n${body}\nendobj\n`); };
+  push(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34, 0x0A, 0x25, 0xE2, 0xE3, 0xCF, 0xD3, 0x0A]));  // %PDF-1.4 + binary marker
+  const n = canvases.length;
+  const ascii = s => s.replace(/[^\x20-\x7E]/g, '').replace(/[\\()]/g, m => '\\' + m);
+  const d = new Date(), stamp = `D:${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+  obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2, `<< /Type /Pages /Kids [${canvases.map((_, i) => (4 + 3 * i) + ' 0 R').join(' ')}] /Count ${n} >>`);
+  obj(3, `<< /Title (${ascii(title)}) /Creator (Hospital Miri NICU Growth Chart) /Producer (NICU Growth web app) /CreationDate (${stamp}) >>`);
+  canvases.forEach((cv, i) => {
+    const p = 4 + 3 * i, jpg = b64ToBytes(cv.toDataURL('image/jpeg', 0.9));
+    obj(p, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${A4W} ${A4H}] /Resources << /XObject << /Im${i} ${p + 2} 0 R >> >> /Contents ${p + 1} 0 R >>`);
+    const cs = `q ${A4W} 0 0 ${A4H} 0 0 cm /Im${i} Do Q`;
+    obj(p + 1, `<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`);
+    offs[p + 2] = len;
+    push(`${p + 2} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${cv.width} /Height ${cv.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`);
+    push(jpg); push('\nendstream\nendobj\n');
+  });
+  const total = 4 + 3 * n, xref = len;
+  let x = `xref\n0 ${total}\n0000000000 65535 f \n`;
+  for (let i = 1; i < total; i++) x += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
+  push(x + `trailer\n<< /Size ${total} /Root 1 0 R /Info 3 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  const out = new Uint8Array(len); let o = 0; parts.forEach(b => { out.set(b, o); o += b.length; });
+  return out;
+}
+
+function fileStem() {
+  const nm = $('pt-name').value.trim().replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
+  return `GrowthChart_${nm || 'patient'}_${todayISO()}`;
+}
+const isIOS = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+async function exportPdf() {
+  if (!patientOK()) { toast('Enter date of birth and GA first'); return; }
+  if (!entries(true).length) { toast('Enter or save at least one measurement'); return; }
+  toast('Preparing PDF…');
+  await loadLogo();
+  await new Promise(r => setTimeout(r, 30));
+  let canvases;
+  try { canvases = buildReport(); } catch (e) { console.error(e); toast('Could not build report'); return; }
+  const bytes = makePdf(canvases, 'Neonatal Growth Chart Report');
+  if (PDF && PDF.url) URL.revokeObjectURL(PDF.url);
+  const name = fileStem() + '.pdf';
+  const blob = new Blob([bytes], { type: 'application/pdf' });
+  let file = null; try { file = new File([blob], name, { type: 'application/pdf' }); } catch (e) {}
+  PDF = { blob, file, name, url: URL.createObjectURL(blob) };
+
+  $('sheet-info').textContent = `${canvases.length} page${canvases.length > 1 ? 's' : ''} · A4 · ${(bytes.length / 1024 / 1024).toFixed(1)} MB`;
+  $('sheet-prev').innerHTML = '';
+  canvases.forEach(cv => {
+    const t = document.createElement('canvas'); t.width = 268; t.height = 380;
+    t.getContext('2d').drawImage(cv, 0, 0, 268, 380);
+    const im = new Image(); im.src = t.toDataURL('image/jpeg', 0.8); im.alt = 'Page preview';
+    $('sheet-prev').appendChild(im);
+  });
+  const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+  $('sh-share').classList.toggle('hidden', !canShare);
+  $('sh-share').textContent = isIOS() ? 'Share / Save to Files' : 'Share';
+  $('sh-dl').className = 'btn ' + (canShare ? 'btn-ghost' : 'btn-primary');
+  $('toast').classList.remove('show');
+  openSheet();
+}
+function openSheet() { $('sheet').classList.remove('hidden'); }
+function closeSheet() { $('sheet').classList.add('hidden'); }
+function download(url, name) { const a = document.createElement('a'); a.href = url; a.download = name; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
+
+async function shareFile(file, title) {
+  try { await navigator.share({ files: [file], title }); return true; }
+  catch (e) { if (e && e.name === 'AbortError') return true; return false; }
+}
+
+async function printReport() {
+  if (!patientOK() || !entries(true).length) { toast('Enter at least one measurement first'); return; }
+  await loadLogo();
+  const canvases = buildReport();
+  const box = $('print-pages'); box.innerHTML = '';
+  await Promise.all(canvases.map(cv => new Promise(res => { const im = new Image(); im.onload = res; im.onerror = res; im.src = cv.toDataURL('image/jpeg', 0.92); box.appendChild(im); })));
+  setTimeout(() => window.print(), 50);
+}
+
+async function exportChartImage() {
+  const list = entries(true); if (!list.length) return;
+  const W = 900, H = 600, sc = 2;
+  const cv = document.createElement('canvas'); cv.width = W * sc; cv.height = H * sc;
+  const c = cv.getContext('2d'); c.scale(sc, sc); c.fillStyle = '#fff'; c.fillRect(0, 0, W, H);
+  const name = $('pt-name').value.trim();
+  const sub = `${name ? name + ' · ' : ''}${S.sex === 'boy' ? 'Male' : 'Female'} · DOB ${fmtDate(S.dob)} · GA ${parseInt(S.gaWk, 10)}w ${parseInt(S.gaDy, 10) || 0}d`;
+  drawChart(c, 10, 10, W - 20, H - 34, TAB, { dark: false, fs: 13, xr: xRange(list), list, title: TABS[TAB].name, subtitle: sub });
+  T(c, 'Hospital Miri NICU · Fenton 2025 / WHO 2006 · for clinical reference only', W / 2, H - 9, { s: 10, c: '#8A939C', a: 'center' });
+  const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+  const name2 = `${fileStem()}_${TAB}.png`;
+  let file = null; try { file = new File([blob], name2, { type: 'image/png' }); } catch (e) {}
+  if (file && isIOS() && navigator.canShare && navigator.canShare({ files: [file] }) && await shareFile(file, name2)) return;
+  const url = URL.createObjectURL(blob); download(url, name2); setTimeout(() => URL.revokeObjectURL(url), 60000);
+  toast('Chart image saved');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ACTIONS
+   ═══════════════════════════════════════════════════════════════════════ */
+function saveVisit() {
+  if (!patientOK()) { toast('Enter date of birth and GA first'); return; }
+  const c = currentEntry();
+  if (!c.date) { toast('Choose a measurement date'); return; }
+  if (!ageAt(c.date)) { toast('Date is before the date of birth'); return; }
+  if (!c.any) { toast('Enter at least one measurement'); $('m-wt').focus(); return; }
+  if (isSaved(c)) { toast('Already in the growth record'); return; }
+  const rec = { id: Date.now().toString(36), date: c.date, wt: has(c.wt) ? c.wt : null, len: has(c.len) ? c.len : null, hc: has(c.hc) ? c.hc : null };
+  const idx = S.visits.findIndex(v => v.date === c.date);
+  if (idx >= 0) {
+    if (!confirm(`There is already a measurement on ${fmtDate(c.date)}. Replace it?`)) return;
+    S.visits[idx] = rec;
+  } else S.visits.push(rec);
+  save();
+  ['m-wt', 'm-len', 'm-hc'].forEach(id => $(id).value = '');
+  document.activeElement && document.activeElement.blur && document.activeElement.blur();
+  renderAll();
+  toast('Saved to growth record ✓');
+}
+
+function deleteVisit(id) {
+  const v = S.visits.find(x => x.id === id); if (!v) return;
+  if (!confirm(`Delete the measurement from ${fmtDate(v.date)}?`)) return;
+  S.visits = S.visits.filter(x => x.id !== id); save(); renderAll();
+}
+
+function fillForm() {
+  $('pt-name').value = S.name || '';
+  $('dob').value = S.dob || '';
+  $('ga-wk').value = S.gaWk || '';
+  $('ga-dy').value = S.gaDy || '';
+  ['m-wt', 'm-len', 'm-hc'].forEach(id => $(id).value = '');
+  $('m-date').value = todayISO();
+}
+function dropIfBlank() { if (S && isBlank(S)) { delete DB.patients[S.id]; } }
+
+function openPatient(id) {
+  if (!DB.patients[id]) return;
+  if (S.id !== id) dropIfBlank();
+  S = DB.patients[id]; DB.current = id; persist();
+  fillForm(); renderAll(); closePatients();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('Opened ' + pLabel(S));
+}
+
+function newPatient() {
+  closePatients();
+  if (!isBlank(S)) {
+    S = blankPatient(S.sex); DB.patients[S.id] = S; DB.current = S.id; persist();
+    fillForm(); renderAll();
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => $('pt-name').focus(), 300);
+  toast('New patient');
+}
+
+function deletePatient(id) {
+  const p = DB.patients[id]; if (!p) return;
+  const n = p.visits.length;
+  if (!confirm(`Delete ${pLabel(p)}${n ? ` and ${n} measurement${n > 1 ? 's' : ''}` : ''}? This cannot be undone.`)) return;
+  delete DB.patients[id];
+  if (id === S.id) {
+    S = sortedPatients()[0] || blankPatient(S.sex);
+    DB.patients[S.id] = S; DB.current = S.id; fillForm();
+  }
+  persist(); renderAll(); renderPatients();
+}
+
+function patientSub(p) {
+  const bits = [];
+  if (p.dob) bits.push('DOB ' + fmtDate(p.dob));
+  if (p.gaWk) bits.push(`${parseInt(p.gaWk, 10)}w ${parseInt(p.gaDy, 10) || 0}d`);
+  const n = p.visits.length;
+  bits.push(n ? `${n} measurement${n > 1 ? 's' : ''}` : 'no measurements');
+  if (n) bits.push('last ' + fmtDate(p.visits.map(v => v.date).sort().pop()));
+  return bits.join(' · ');
+}
+
+function renderPatients() {
+  const all = sortedPatients().filter(p => !isBlank(p) || p.id === S.id);
+  const q = $('ps-search').value.trim().toLowerCase();
+  $('ps-search').classList.toggle('hidden', all.length < 5);
+  const list = q ? all.filter(p => (p.name || '').toLowerCase().includes(q) || (p.dob || '').includes(q)) : all;
+  $('ps-list').innerHTML = list.length ? list.map(p => `
+    <div class="ps-item${p.id === S.id ? ' on' : ''}" data-open="${esc(p.id)}">
+      <div class="ps-av ${p.sex === 'girl' ? 'girl' : 'boy'}">${p.sex === 'girl' ? '♀' : '♂'}</div>
+      <div class="ps-txt"><b>${esc(pLabel(p))}</b><span>${p.id === S.id ? '<span style="display:inline;color:var(--blue);font-weight:700">Open · </span>' : ''}${esc(patientSub(p))}</span></div>
+      <button class="ps-del" type="button" data-pdel="${esc(p.id)}" aria-label="Delete patient">×</button>
+    </div>`).join('') : '<div class="empty">No patients found.</div>';
+}
+function openPatients() { $('ps-search').value = ''; renderPatients(); $('psheet').classList.remove('hidden'); }
+function closePatients() { $('psheet').classList.add('hidden'); }
+
+async function backupAll() {
+  const pats = sortedPatients().filter(p => !isBlank(p));
+  if (!pats.length) { toast('No patients to back up'); return; }
+  const data = JSON.stringify({ app: 'nicu-growth-chart', version: 3, exported: new Date().toISOString(), patients: pats });
+  const name = `GrowthChart_backup_${todayISO()}.json`;
+  const blob = new Blob([data], { type: 'application/json' });
+  let file = null; try { file = new File([blob], name, { type: 'application/json' }); } catch (e) {}
+  if (file && isIOS() && navigator.canShare && navigator.canShare({ files: [file] }) && await shareFile(file, name)) return;
+  const url = URL.createObjectURL(blob); download(url, name); setTimeout(() => URL.revokeObjectURL(url), 60000);
+  toast(`Backup saved (${pats.length} patient${pats.length > 1 ? 's' : ''})`);
+}
+
+function restoreFrom(file) {
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const j = JSON.parse(r.result);
+      const list = Array.isArray(j) ? j : j.patients;
+      if (!Array.isArray(list)) throw new Error('bad');
+      let added = 0, updated = 0;
+      list.forEach(p => {
+        if (!p || !p.id || !Array.isArray(p.visits)) return;
+        const ex = DB.patients[p.id];
+        if (!ex) { DB.patients[p.id] = Object.assign(blankPatient(), p); added++; }
+        else if ((p.updated || 0) > (ex.updated || 0)) { DB.patients[p.id] = Object.assign(blankPatient(), p); updated++; }
+      });
+      S = DB.patients[S.id] || S; persist(); fillForm(); renderAll(); renderPatients();
+      toast(`Restored: ${added} new, ${updated} updated`);
+    } catch (e) { toast('Not a valid backup file'); }
+  };
+  r.readAsText(file);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   WIRING
+   ═══════════════════════════════════════════════════════════════════════ */
+function init() {
+  load();
+  fillForm();
+  $('pt-name').addEventListener('input', () => { S.name = $('pt-name').value.trim(); save(); renderPatientUI(); });
+
+  document.querySelectorAll('#sex-seg button').forEach(b => b.addEventListener('click', () => { S.sex = b.dataset.sex; save(); renderAll(); }));
+  $('dob').addEventListener('input', () => { S.dob = $('dob').value; save(); renderAll(); });
+  $('ga-wk').addEventListener('input', () => { S.gaWk = $('ga-wk').value.replace(/\D/g, ''); $('ga-wk').value = S.gaWk; save(); renderAll(); });
+  $('ga-dy').addEventListener('input', () => { S.gaDy = $('ga-dy').value.replace(/[^0-6]/g, ''); $('ga-dy').value = S.gaDy; save(); renderAll(); });
+  $('m-date').addEventListener('input', () => { renderAge(); renderPct(); renderChart(); });
+  ['m-wt', 'm-len', 'm-hc'].forEach(id => {
+    $(id).addEventListener('input', () => { renderPct(); renderChart(); });
+    $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const nx = { 'm-wt': 'm-len', 'm-len': 'm-hc' }[id]; nx ? $(nx).focus() : saveVisit(); } });
+  });
+  $('ga-wk').addEventListener('keydown', e => { if (e.key === 'Enter') $('ga-dy').focus(); });
+
+  $('btn-save').addEventListener('click', saveVisit);
+  $('ab-save').addEventListener('click', () => {
+    if (!currentEntry().any) { $('assess-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(() => $('m-wt').focus(), 350); return; }
+    saveVisit();
+  });
+  $('ab-pdf').addEventListener('click', exportPdf);
+  $('btn-pdf2').addEventListener('click', exportPdf);
+  $('btn-print').addEventListener('click', printReport);
+  $('btn-img').addEventListener('click', exportChartImage);
+  $('btn-patients').addEventListener('click', openPatients);
+  $('btn-switch').addEventListener('click', openPatients);
+  $('ps-new').addEventListener('click', newPatient);
+  $('ps-close').addEventListener('click', closePatients);
+  $('psheet').addEventListener('click', e => {
+    if (e.target === $('psheet')) return closePatients();
+    const d = e.target.closest('[data-pdel]'); if (d) { e.stopPropagation(); return deletePatient(d.dataset.pdel); }
+    const o = e.target.closest('[data-open]'); if (o) openPatient(o.dataset.open);
+  });
+  $('ps-search').addEventListener('input', renderPatients);
+  $('ps-backup').addEventListener('click', backupAll);
+  $('ps-restore').addEventListener('click', () => $('restore-file').click());
+  $('restore-file').addEventListener('change', e => { const f = e.target.files[0]; if (f) restoreFrom(f); e.target.value = ''; });
+  $('rec-list').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (b) deleteVisit(b.dataset.del); });
+
+  document.querySelectorAll('#tab-seg button').forEach(b => b.addEventListener('click', () => {
+    TAB = b.dataset.tab;
+    document.querySelectorAll('#tab-seg button').forEach(x => x.classList.toggle('on', x === b));
+    renderChart();
+  }));
+  $('chart').addEventListener('click', showTip);
+  document.addEventListener('click', e => { if (!e.target.closest('#chart')) $('tip').classList.add('hidden'); });
+
+  // export sheet
+  $('sh-close').addEventListener('click', closeSheet);
+  $('sheet').addEventListener('click', e => { if (e.target === $('sheet')) closeSheet(); });
+  $('sh-share').addEventListener('click', async () => { if (PDF && PDF.file && !(await shareFile(PDF.file, PDF.name))) download(PDF.url, PDF.name); });
+  $('sh-dl').addEventListener('click', () => { if (PDF) { download(PDF.url, PDF.name); toast('Downloading PDF'); } });
+  $('sh-open').addEventListener('click', () => { if (PDF) { const w = window.open(PDF.url, '_blank'); if (!w) location.href = PDF.url; } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); closePatients(); } });
+  window.addEventListener('afterprint', () => { $('print-pages').innerHTML = ''; });
+
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(renderChart, 120); });
+  try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderChart); } catch (e) {}
+  let autoDate = todayISO();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && $('m-date').value === autoDate && autoDate !== todayISO()) { autoDate = todayISO(); $('m-date').value = autoDate; renderAll(); } });
+
+  renderAll();
+  loadLogo();
+
+  // Offline: cache the app on first visit (needs https, e.g. GitHub Pages)
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    const first = !navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('sw.js').then(() => {
+      if (first) navigator.serviceWorker.addEventListener('controllerchange', () => toast('Ready to use offline ✓'), { once: true });
+    }).catch(() => {});
+  }
+  window.addEventListener('offline', () => toast('Offline — the app keeps working'));
+}
+init();
+</script>
+</body>
+</html>
